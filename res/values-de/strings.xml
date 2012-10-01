@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stap_service_started">Der SystemTap Dienst wurde gestartet!</string>
+    <string name="stap_service_running">Der SystemTap Dienst läuft im Hintergrund.</string>
+    <string name="stap_service_detail_info">Für weitere Informationen hier klicken.</string>
+    
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="menu_settings">Settings</string>
+    <string name="stap_service_started">SystemTap service has been started!</string>
+    <string name="stap_service_running">The SystemTap service is running in background.</string>
+    <string name="stap_service_detail_info">For further information tap hier.</string>
+    <string name="stap_service_start_failed">SystemTap service could not be initialized.</string>
+    <string name="stap_service_terminated">SystemTap service terminated</string>
+    <string name="stap_service_stop_success">Stopped stap script</string>
+    <string name="stap_service_stop_fail">Could not stop script</string>
+    <string name="stap_service_start_success">Started stap script</string>
+    <string name="stap_service_stop_fail_nomdoule">No such module to stop</string>
+    <string name="stap_service_start_fail_nomodule">No such module to start</string>
+    <string name="stap_module_running">running</string>
+    <string name="stap_module_crashed">crashed</string>
+    <string name="stap_module_stopped">stopped</string>
+</resources>
