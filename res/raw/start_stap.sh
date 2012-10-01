@@ -1,35 +1,33 @@
 #!/system/bin/sh
-PATH=`pwd`
 STORAGE_PATH="/sdcard"
-CONFIG_FILE="stap.conf"
-LOG_OUTPUT_EXTENSION="txt"
+LOG_OUTPUT_EXTENSION=".txt"
+PID_EXTENSION=".pid"
+KERNEL_MODULE_EXTENSION=".ko"
 
-COUNT=1
-while read line;
+line=","
+while [ $line != ":q!" ];
 do
-	case "$COUNT" in
-	1) MODULE_NAME=$line;;
-	2) MODULE_DIR=$line;;
-	3) OUTPUT_NAME=$line;;
-	4) OUTPUT_DIR=$line;;
-	5) LOG_OUTPUT_DIR=$line;;
+	read line
+	first=${line%=*}
+	second=${line#*=}
+	case "$first" in
+	"modulename") MODULE_NAME=$second;;
+	"moduledir") MODULE_DIR=$second;;
+	"outputname") OUTPUT_NAME=$second;;
+	"outputdir") OUTPUT_DIR=$second;;
+	"logdir") LOG_DIR=$second;;
+	"rundir") RUN_DIR=$second;;
+	"stapdir") STAP_DIR=$second;;
 	*) ;;
 	esac
-	let COUNT=COUNT+1
-done < "$PATH/$CONFIG_FILE";
+done;
 
-if [ $COUNT -le 5 ];
-then
-	echo "Insufficient parameters"
-	exit 1
-fi
+LOG_OUTPUT=$LOG_DIR"/"$OUTPUT_NAME$LOG_OUTPUT_EXTENSION
 
-LOG_OUTPUT=$LOG_OUTPUT_DIR"/"$OUTPUT_NAME"."$LOG_OUTPUT_EXTENSION
-
-export SYSTEMTAP_STAPRUN=$PATH"/staprun"
-export SYSTEMTAP_STAPIO=$PATH"/stapio"
+export SYSTEMTAP_STAPRUN=$STAP_DIR"/staprun"
+export SYSTEMTAP_STAPIO=$STAP_DIR"/stapio"
 
 echo "Loaded kernel module: "$MODULE_NAME.ko > $LOG_OUTPUT
 echo "Output file: "$OUTPUT_NAME".*" >> $LOG_OUTPUT
 
-$SYSTEMTAP_STAPRUN -o $OUTPUT_DIR"/"$OUTPUT_NAME -S 256 $MODULE_DIR"/"$MODULE_NAME.ko >> $LOG_OUTPUT 2>&1 &
+$SYSTEMTAP_STAPRUN -M $RUN_DIR"/"$MODULE_NAME$PID_EXTENSION -o $OUTPUT_DIR"/"$OUTPUT_NAME -S 256 $MODULE_DIR"/"$MODULE_NAME$KERNEL_MODULE_EXTENSION >> $LOG_OUTPUT 2>&1 &

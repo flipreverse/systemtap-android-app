@@ -1,27 +1,22 @@
 #!/system/bin/sh
-PATH=`pwd`
 BUSYBOX="busybox"
-CONFIG_FILE="kill.conf"
 
-COUNT=1
-while read line;
+line=","
+while [ $line != ":q!" ];
 do
-	case "$COUNT" in
-	1) PID=$line;;
+	read line
+	first=${line%=*}
+	second=${line#*=}
+	case "$first" in
+	"pid") PID=$second;;
+	"busyboxdir") BUSYBOX_DIR=$second;;
 	*) ;;
 	esac
-	let COUNT=COUNT+1
-done < "$PATH/$CONFIG_FILE";
-
-if [ $COUNT -le 1 ];
-then
-	echo "Insufficient parameters"
-	exit 1
-fi
+done;
 
 if [ $PID -eq -1 ];
 then
-	$PATH/$BUSYBOX killall -2 stapio
+	$BUSYBOX_DIR/$BUSYBOX killall -2 stapio
 else
-	$PATH/$BUSYBOX kill -2 
+	$BUSYBOX_DIR/$BUSYBOX kill -2 $PID
 fi
