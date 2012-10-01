@@ -3,12 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <TextView
+
+    <Button
+        android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:text="@string/hello_world"
-        tools:context=".SystemtapActivity" />
+        android:layout_marginLeft="26dp"
+        android:layout_marginTop="47dp"
+        android:text="Button" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/button1"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="90dp"
+        android:text="Button" />
 
 </RelativeLayout>
