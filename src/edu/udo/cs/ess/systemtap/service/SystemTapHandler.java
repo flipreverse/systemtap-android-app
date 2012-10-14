@@ -55,7 +55,7 @@ public class SystemTapHandler extends Handler
 				{
 					module = mModuleManagement.createModule(modulename);
 				}
-				DateFormat format = new SimpleDateFormat("yyyy.mm.dd_HH.mm.ss");
+				DateFormat format = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss");
 				Date date = new Date();
 				String outputFilename = modulename + "_" + format.format(date);
 				list = new LinkedList<String>();

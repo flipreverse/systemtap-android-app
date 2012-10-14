@@ -48,6 +48,9 @@ public class ModuleManagement extends Observable
 		{
 			module = new Module(pName);
 			mModules.put(pName, module);
+			this.setChanged();
+			this.notifyObservers(mModules.values());
+			this.clearChanged();
 		}
 		else
 		{
@@ -63,7 +66,7 @@ public class ModuleManagement extends Observable
 		{
 			module.setStatus(pStatus);
 			this.setChanged();
-			this.notifyObservers();
+			this.notifyObservers(mModules.values());
 			this.clearChanged();
 		}
 		else
@@ -74,6 +77,8 @@ public class ModuleManagement extends Observable
 	
 	public synchronized void updateModules()
 	{
+		boolean changed = false;
+		
 		Eventlog.d(TAG, "Updating module list...");
 		File moduleDir = new File(Config.MODULES_ABSOLUTE_PATH);
 		File moduleFiles[] = moduleDir.listFiles(new FilenameFilter()
@@ -95,6 +100,7 @@ public class ModuleManagement extends Observable
 			{
 				Eventlog.d(TAG,"No, create a new module (" + modulename + ")");
 				this.createModule(modulename);
+				changed = true;
 			}
 			else
 			{
@@ -118,6 +124,7 @@ public class ModuleManagement extends Observable
 				{
 					Eventlog.d(TAG, "No, it does not exist. Delete it from database.");
 					mModules.remove(module.getName());
+					changed = true;
 				}
 			}
 			else
@@ -125,6 +132,13 @@ public class ModuleManagement extends Observable
 				//TODO: do a md5 check of file content
 				Eventlog.d(TAG, "Yes, it does.");
 			}
+		}
+		
+		if (changed)
+		{
+			this.setChanged();
+			this.notifyObservers(mModules.values());
+			this.clearChanged();
 		}
 	}
 }

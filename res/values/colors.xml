@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="stap_module_running">#00FF00</color>
+    <color name="stap_module_stopped">#FF0000</color>
+    <color name="stap_module_crashed">#ff4500</color>
+    <color name="bg_striped">#ff0000</color>
+    
+</resources>

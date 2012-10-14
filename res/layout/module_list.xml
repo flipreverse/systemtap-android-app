@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp"
+    android:gravity="center"
+    android:orientation="vertical" >
+ 
+       <ListView
+           android:id="@+id/listViewModules"
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           android:fadingEdge="vertical"
+           android:fadingEdgeLength="10dp"
+           android:longClickable="true" >
+
+       </ListView>
+       <TextView
+           android:id="@android:id/empty"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_gravity="center|center_horizontal|center_vertical"
+           android:text="@string/stap_module_list_empty"
+           android:textAppearance="?android:attr/textAppearanceMedium" />
+
+</LinearLayout>

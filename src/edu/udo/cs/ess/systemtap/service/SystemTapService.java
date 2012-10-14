@@ -26,7 +26,7 @@ import android.widget.Toast;
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 import edu.udo.cs.ess.systemtap.R;
-import edu.udo.cs.ess.systemtap.SystemtapActivity;
+import edu.udo.cs.ess.systemtap.SystemTapActivity;
 
 public class SystemTapService extends Service
 {
@@ -146,6 +146,17 @@ public class SystemTapService extends Service
 		data.putString(SystemTapHandler.MODULENAME_ID, pModulename);
 		msg.setData(data);
 		mSystemTapHandler.sendMessage(msg);
+	}
+	
+	public Module getModule(String pName)
+	{
+		if (!mInit || mInitFailed)
+		{
+			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			return null;
+		}
+		
+		return mModuleManagetment.getModule(pName);
 	}
 	
 	public Collection<Module> getModules()
@@ -320,7 +331,7 @@ public class SystemTapService extends Service
 		Util.runCmdAsRoot(this.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME, list);
 		
 		Notification notification = new Notification(R.drawable.ic_launcher, this.getText(R.string.stap_service_started),System.currentTimeMillis());
-		Intent target_intent = new Intent(this,SystemtapActivity.class);
+		Intent target_intent = new Intent(this,SystemTapActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, target_intent, 0);
         notification.setLatestEventInfo(this, this.getText(R.string.stap_service_running),this.getText(R.string.stap_service_detail_info), contentIntent);
         this.startForeground(SystemTapService.NOTIFICATION_ID, notification);
