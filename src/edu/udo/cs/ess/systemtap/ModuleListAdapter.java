@@ -133,7 +133,6 @@ public class ModuleListAdapter extends BaseAdapter implements Observer
 	@Override
 	public void update(Observable pObservable, final Object pData)
 	{
-		Eventlog.e(TAG, "update() called");
 		if (pData instanceof Collection<?>)
 		{
 			synchronized (mData)
@@ -143,7 +142,6 @@ public class ModuleListAdapter extends BaseAdapter implements Observer
 					@Override
 					public void run()
 					{
-						Eventlog.e(TAG, "update(): got collection");
 						Collection<Module> newData = (Collection<Module>)pData;
 						ModuleListAdapter.this.mData.clear();
 						ModuleListAdapter.this.mData.addAll(newData);

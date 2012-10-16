@@ -2,7 +2,9 @@ package edu.udo.cs.ess.systemtap.service;
 
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
@@ -222,5 +224,93 @@ public class Util
 			Eventlog.printStackTrace(TAG, e);
 		}		
 		return null;
+	}
+	
+	/**
+	 * Reads {@link pPidFile}s content, which acutally should be a process id.   It checks wether it belongs to a running process.
+	 * @param pContext the activities context
+	 * @param pPidFile 
+	 * @return true if the pid belongs to a running process
+	 * @throws IOException
+	 */
+	public static boolean isPidFilePidValid(Context pContext, File pPidFile) throws IOException
+	{
+		int pid = -1;
+		DataInputStream in = new DataInputStream(new FileInputStream(pPidFile));
+		pid = Integer.valueOf(in.readLine());
+		in.close();
+		in = null;
+		List<Integer> pids = Util.getProcessIDs(pContext,Config.STAP_IO_NAME);
+
+		if (pids == null)
+		{
+			return false;
+		}
+		
+		return pids.contains(pid);
+	}
+	
+	/**
+	 * First check if pid file exists. Second, read its content and query system wether the pid belongs a running process.
+	 * @param pContext the activities context
+	 * @param pModulename the modulename which status the caller wants to know
+	 * @param pShouldRun true if the service expects this module running
+	 * @return Returns new module state
+	 */
+	public static Module.Status checkModuleStatus(Context pContext, String pModulename, boolean pShouldRun)
+	{
+		File pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + pModulename + Config.PID_EXT);
+		if (pidFile.exists())
+		{
+			try
+			{
+				if (Util.isPidFilePidValid(pContext,pidFile))
+				{
+					if (pShouldRun)
+					{
+						Eventlog.d(TAG,"module (" + pModulename + ") is running and pid file exists. all fine. :-)");
+						return Module.Status.RUNNING;
+					}
+					else
+					{
+						Eventlog.e(TAG,"module (" + pModulename + ") is stopped, but stap is running. Updating status...");
+						return Module.Status.RUNNING;
+					}
+				}
+				else
+				{
+					if (pShouldRun)
+					{
+						Eventlog.e(TAG,"module (" + pModulename + ") is running, but stap is not running. Updating status....");
+						Eventlog.e(TAG,"module (" + pModulename + ") is crashed. Removing pid file: " + pidFile.delete());
+						return Module.Status.CRASHED;
+					}
+					else
+					{
+						Eventlog.d(TAG,"module (" + pModulename + ") is stopped, but pidfile exsits. Deleting it: " + pidFile.delete());
+						return Module.Status.STOPPED;
+					}
+				}
+			}
+			catch (IOException e)
+			{
+				Eventlog.e(TAG,"Error reading pid file of module " + pModulename + ". Try again later.");
+				Eventlog.printStackTrace(TAG, e);
+				return Module.Status.CRASHED;
+			}
+		}
+		else
+		{
+			if (pShouldRun)
+			{
+				Eventlog.e(TAG,"module (" + pModulename + ") is running, but stap (no pid file) is not running. Updating status....");
+				return Module.Status.CRASHED;
+			}
+			else
+			{
+				Eventlog.d(TAG,"module (" + pModulename + ") is stopped and no pid file exists. all fine. :-)");
+				return Module.Status.STOPPED;
+			}
+		}
 	}
 }

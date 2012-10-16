@@ -72,11 +72,12 @@ public class SystemTapHandler extends Handler
 				{
 					Eventlog.e(TAG,"Could not start stap");
 					Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_failed) + ":" + modulename, Toast.LENGTH_SHORT).show();
-					module.setStatus(Module.Status.STOPPED);
+					mModuleManagement.updateModuleStatus(module.getName(), Module.Status.CRASHED);
 				}
 				else
 				{
-					module.setStatus(Module.Status.RUNNING);
+					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), true);
+					mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
 				}
 			}
 			else

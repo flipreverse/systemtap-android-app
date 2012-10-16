@@ -173,36 +173,46 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	@Override
 	public void update(Observable observable, Object data)
 	{
-		if (mSelectedModule != null)
+		this.runOnUiThread(new Runnable()
 		{
-			Module module = mSystemTapService.getModule(mSelectedModule);
-			if (module == null)
+			public void run()
 			{
-				Eventlog.e(TAG,"update(): module is null");
-				return;
+				if (SystemTapActivity.this.mSelectedModule != null)
+				{
+					Module module = SystemTapActivity.this.mSystemTapService.getModule(SystemTapActivity.this.mSelectedModule);
+					if (module == null)
+					{
+						Eventlog.e(TAG,"update(): module is null");
+						return;
+					}
+					switch(module.getStatus())
+					{
+						case RUNNING:
+							SystemTapActivity.this.mTextViewModuleDetailsStatus.setText(SystemTapActivity.this.getText(R.string.stap_module_running));
+							SystemTapActivity.this.mTextViewModuleDetailsStatus.setTextColor(SystemTapActivity.this.getResources().getColor(R.color.stap_module_running));
+							SystemTapActivity.this.mButtonModuleDetailsCtrl.setText(R.string.stap_button_stop);
+							break;
+		
+						case STOPPED:
+							SystemTapActivity.this.mTextViewModuleDetailsStatus.setText(SystemTapActivity.this.getText(R.string.stap_module_stopped));
+							SystemTapActivity.this.mTextViewModuleDetailsStatus.setTextColor(SystemTapActivity.this.getResources().getColor(R.color.stap_module_stopped));
+							SystemTapActivity.this.mTextViewModuleDetailsStatus.setTextSize(10);
+							SystemTapActivity.this.mButtonModuleDetailsCtrl.setText(R.string.stap_button_start);
+							break;
+		
+						case CRASHED:
+							SystemTapActivity.this.mTextViewModuleDetailsStatus.setText(SystemTapActivity.this.getText(R.string.stap_module_crashed));
+							SystemTapActivity.this.mTextViewModuleDetailsStatus.setTextColor(SystemTapActivity.this.getResources().getColor(R.color.stap_module_crashed));
+							SystemTapActivity.this.mButtonModuleDetailsCtrl.setText(R.string.stap_button_start);
+							break;
+					}
+				}
+				else
+				{
+					Eventlog.e(TAG, "update(): mSelectedModule is null");
+				}
 			}
-			switch(module.getStatus())
-			{
-				case RUNNING:
-					mTextViewModuleDetailsStatus.setText(this.getText(R.string.stap_module_running));
-					mTextViewModuleDetailsStatus.setTextColor(this.getResources().getColor(R.color.stap_module_running));
-					mButtonModuleDetailsCtrl.setText(R.string.stap_button_stop);
-					break;
-
-				case STOPPED:
-					mTextViewModuleDetailsStatus.setText(this.getText(R.string.stap_module_stopped));
-					mTextViewModuleDetailsStatus.setTextColor(this.getResources().getColor(R.color.stap_module_stopped));
-					mTextViewModuleDetailsStatus.setTextSize(10);
-					mButtonModuleDetailsCtrl.setText(R.string.stap_button_start);
-					break;
-
-				case CRASHED:
-					mTextViewModuleDetailsStatus.setText(this.getText(R.string.stap_module_crashed));
-					mTextViewModuleDetailsStatus.setTextColor(this.getResources().getColor(R.color.stap_module_crashed));
-					mButtonModuleDetailsCtrl.setText(R.string.stap_button_start);
-					break;
-			}
-		}
+		});
 	}
 	
 	@Override
@@ -285,6 +295,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
     	{
     		this.unbindService(mConnection);
     		Eventlog.d(TAG,"SystemTapService unbounded");
+        	mSystemTapService.unregisterObserver(this);
     		mSystemTapService = null;
     	}
     	else
@@ -301,6 +312,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 		public void onServiceConnected(ComponentName className, IBinder service)
         {
         	mSystemTapService = ((SystemTapBinder)service).getService();
+        	mSystemTapService.registerObserver(SystemTapActivity.this);
         	SystemTapActivity.this.mMutex.unlock();
     		Eventlog.d(TAG,"SystemTapService bounded");
         }

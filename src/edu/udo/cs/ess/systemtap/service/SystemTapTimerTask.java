@@ -27,93 +27,31 @@ public class SystemTapTimerTask extends TimerTask
 	@Override
 	public void run()
 	{
-		File pidFile = null;
+		Module.Status moduleStatus;
 		
 		Eventlog.d(TAG, "Check if modules (" + mModuleManagement.getModules().size() + ") status is still up to date");
 		for(Module module:mModuleManagement.getModules())
 		{
 			Eventlog.d(TAG,"Current module: " + module.getName() + ",  status=" + module.getStatus());
+			moduleStatus = module.getStatus();
 			switch (module.getStatus())
 			{
 				case RUNNING:
-					pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + module.getName() + Config.PID_EXT);
-					if (pidFile.exists())
-					{
-						try
-						{
-							if (this.isPidFilePidValid(pidFile))
-							{
-								Eventlog.e(TAG,"module (" + module.getName() + ") is running and pid file exists. all fine. :-)");
-							}
-							else
-							{
-								Eventlog.e(TAG,"module (" + module.getName() + ") is running, but stap is not running. Updating status....");
-								mModuleManagement.updateModuleStatus(module.getName(), Module.Status.CRASHED);
-								Eventlog.e(TAG,"module (" + module.getName() + ") is crashed. Removing pid file: " + pidFile.delete());
-							}
-						}
-						catch (IOException e)
-						{
-							Eventlog.e(TAG,"Error reading pid file of module " + module.getName() + ". Try again later.");
-							Eventlog.printStackTrace(TAG, e);
-						}
-					}
-					else
-					{
-						Eventlog.e(TAG,"module (" + module.getName() + ") is running, but stap (no pid file) is not running. Updating status....");
-						mModuleManagement.updateModuleStatus(module.getName(), Module.Status.CRASHED);
-					}
+					moduleStatus = Util.checkModuleStatus(mContext, module.getName(), true);
 					break;
 					
 				case STOPPED:
-					pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + module.getName() + Config.PID_EXT);
-					if (pidFile.exists())
-					{
-						try
-						{
-							if (this.isPidFilePidValid(pidFile))
-							{
-								Eventlog.e(TAG,"module (" + module.getName() + ") is stopped, but stap is running. Updating status....");
-								mModuleManagement.updateModuleStatus(module.getName(), Module.Status.RUNNING);
-							}
-							else
-							{
-								Eventlog.d(TAG,"module (" + module.getName() + ") is stopped, but pidfile exsits. Deleting it: " + pidFile.delete());
-							}
-						}
-						catch (IOException e)
-						{
-							Eventlog.e(TAG,"Error reading pid file of module " + module.getName() + ". Try again later.");
-							Eventlog.printStackTrace(TAG, e);
-						}
-					}
-					else
-					{
-						Eventlog.d(TAG,"module (" + module.getName() + ") is stopped and no pid file exists. all fine. :-)");
-					}
+					moduleStatus = Util.checkModuleStatus(mContext, module.getName(), false);
 					break;
 					
 				case CRASHED:
 					break;
 			}
-			pidFile = null;
+			if (module.getStatus() != moduleStatus)
+			{
+				Eventlog.d(TAG,"modules (" + module.getName() + ") status has changed. Updating database...");
+				mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
+			}
 		}
-	}
-
-	private boolean isPidFilePidValid(File pPidFile) throws IOException
-	{
-		int pid = -1;
-		DataInputStream in = new DataInputStream(new FileInputStream(pPidFile));
-		pid = Integer.valueOf(in.readLine());
-		in.close();
-		in = null;
-		List<Integer> pids = Util.getProcessIDs(mContext,Config.STAP_IO_NAME);
-
-		if (pids == null)
-		{
-			return false;
-		}
-		
-		return pids.contains(pid);
 	}
 }
