@@ -1,4 +1,5 @@
 package edu.udo.cs.ess.systemtap;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Observable;
@@ -10,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.TextView;
 import edu.udo.cs.ess.systemtap.service.Module;
 
 
@@ -37,7 +39,8 @@ public class ModuleSpinnerAdapter extends BaseAdapter implements Observer
 	@Override
 	public boolean isEnabled(int pPosition)
 	{
-		if (pPosition < mData.size())
+		/* if the user selects the first element and mData is empty, return true, because one dummy item is present */
+		if ((pPosition == 0 && mData.size() == 0) || pPosition < mData.size())
 		{
 			return true;
 		}
@@ -50,7 +53,15 @@ public class ModuleSpinnerAdapter extends BaseAdapter implements Observer
 	@Override
 	public int getCount()
 	{
-		return mData.size();
+		/* Although mData is empty at least one dummy item is present  */
+		if (mData.size() == 0)
+		{
+			return 1;
+		}
+		else
+		{
+			return mData.size();
+		}
 	}
 
 	@Override
@@ -78,20 +89,31 @@ public class ModuleSpinnerAdapter extends BaseAdapter implements Observer
 		View itemView;
 		if (pConvertView == null)
 		{
-			 itemView = mLayoutInflater.inflate(R.layout.module_list_item, pParent, false);
+			 itemView = mLayoutInflater.inflate(R.layout.spinnter_item, pParent, false);
 		}
 		else
 		{
 			itemView = pConvertView;
 		}
-		
-		//TODO
+
+		TextView textViewModuleName = (TextView)itemView.findViewById(R.id.textViewSpinnerModuleName);
+		/* No further check of pPosition required. If mData is empty and getView() is called, the ui just requests *one* item which has the text stap_module_list_empty */
+		if (mData.size() == 0)
+		{
+			textViewModuleName.setText(R.string.stap_module_list_empty);
+		}
+		else
+		{
+			Module module = mData.get(pPosition);
+			textViewModuleName.setText(module.getName());
+		}
 		
 		return itemView;
 	}
 
 	public void setData(Collection<Module> pData)
 	{
+		/* Avoid raceconditions access mData */
 		synchronized (mData)
 		{
 			mData.clear();
@@ -103,10 +125,14 @@ public class ModuleSpinnerAdapter extends BaseAdapter implements Observer
 	@Override
 	public void update(Observable pObservable, final Object pData)
 	{
+		/* Some sanity checks to ensure pData is a Collection */
 		if (pData instanceof Collection<?>)
 		{
+			/* Avoid raceconditions accessing mData */
 			synchronized (mData)
 			{
+				/* If the adapter gets new data, a call to notifyDataSetChanged() should be done from the ui thread. */
+				/* Only the ui thread is allowed to manipulate the gui */
 				mActivity.runOnUiThread(new Runnable()
 				{
 					@Override

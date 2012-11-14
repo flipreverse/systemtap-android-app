@@ -1,5 +1,9 @@
 package edu.udo.cs.ess.systemtap;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.locks.ReentrantLock;
@@ -30,9 +34,11 @@ import edu.udo.cs.ess.systemtap.service.SystemTapService;
 public class SystemTapActivity  extends SherlockFragmentActivity implements ActionBar.TabListener, OnClickListener, Observer 
 {
 	public static final String CONTEXT_TAG = "context";
-	public static final String MODULE_ID_NAME = "moduleid";
+	public static final String MODULE_ID = "moduleid";
+	public static final String LOGFILE_OBJECT = "logfileobject";
 	
 	public static final int  MODULE_DETAILS_DIALOG = 0x1;
+	public static final int LOGFILE_DETAILS_DIALOG = 0x2;
 	
 	private static final String TAG = SystemTapActivity.class.getSimpleName();
 	
@@ -43,10 +49,14 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
     
     private Button mButtonModuleDetailsOK;
     private Button mButtonModuleDetailsCtrl;
+    private Button mButtonLogFileDetailsOK;
     private TextView mTextViewModuleDetailsName;
     private TextView mTextViewModuleDetailsStatus;
+    private TextView mTextViewLogFileDetailsContent;
+    private TextView mTextViewLogFileDetailsHeading;
 	private int mButtonModuleDetailsOKID;
 	private int mButtonModuleDetailsCtrlID;
+	private int mButtonLogFileDetailsOKID;
 	private String mSelectedModule;
 	
     @Override
@@ -135,6 +145,10 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 			mSelectedModule = null;
 			this.dismissDialog(SystemTapActivity.MODULE_DETAILS_DIALOG);
 		}
+		else if (pView.getId() == mButtonLogFileDetailsOKID)
+		{
+			this.dismissDialog(SystemTapActivity.LOGFILE_DETAILS_DIALOG);
+		}
 	}
 	
 	@Override
@@ -162,6 +176,21 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	            mTextViewModuleDetailsName = (TextView)dialog.findViewById(R.id.textViewModuleDetailsNameValue);
 	            
 	            mTextViewModuleDetailsStatus = (TextView)dialog.findViewById(R.id.textViewModuleDetailsStatusValue);
+				break;
+			
+			case LOGFILE_DETAILS_DIALOG:
+				dialog = new Dialog(this);
+				dialog.setOwnerActivity(this);
+	            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+	            dialog.setContentView(R.layout.file_details);
+	            dialog.setCancelable(false);
+	            
+	            mButtonLogFileDetailsOK = (Button)dialog.findViewById(R.id.buttonFileDetailsOk);
+	            mButtonLogFileDetailsOK.setOnClickListener(this);
+	            mButtonLogFileDetailsOKID = mButtonLogFileDetailsOK.getId();
+	            
+	            mTextViewLogFileDetailsContent = (TextView)dialog.findViewById(R.id.textViewFileDetailsContent);
+	            mTextViewLogFileDetailsHeading = (TextView)dialog.findViewById(R.id.textViewFileDetailsHeading);
 				break;
 				
 			default:
@@ -221,7 +250,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 		switch(pID)
 		{
 			case MODULE_DETAILS_DIALOG:
-				String moduleName = pArgs.getString(SystemTapActivity.MODULE_ID_NAME);
+				String moduleName = pArgs.getString(SystemTapActivity.MODULE_ID);
 				if (moduleName == null)
 				{
 					Eventlog.e(TAG, "onPrepareDialog(): moduleName is null");
@@ -258,6 +287,38 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 				}
 				break;
 				
+			case LOGFILE_DETAILS_DIALOG:
+				final File file = (File)pArgs.getSerializable(SystemTapActivity.LOGFILE_OBJECT);
+				if (file == null)
+				{
+					Eventlog.e(TAG,"file not given");
+					break;
+				}
+				mTextViewLogFileDetailsContent.setText("");
+				this.runOnUiThread(new Runnable()
+				{
+					public void run()
+					{
+						try
+						{
+							BufferedReader in = new BufferedReader(new FileReader(file));
+							String buff;
+							while ((buff = in.readLine()) != null)
+							{
+								buff += "\n";
+								mTextViewLogFileDetailsContent.append(buff);
+							}
+							in.close();
+						}
+						catch (IOException e)
+						{
+							Eventlog.printStackTrace(TAG, e);
+						}
+					}
+				});
+				mTextViewLogFileDetailsHeading.setText(file.getName());
+				break;
+			
 			default:
 				super.onPrepareDialog(pID, pDialog,pArgs);
 		}

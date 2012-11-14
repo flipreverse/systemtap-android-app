@@ -57,7 +57,8 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
     {
     	Intent intent = new Intent(this.getActivity(),SystemTapService.class);
     	this.getActivity().startService(intent);
-    	
+
+    	/* Hold the lock, so onStop() will block til the service is bounded */
     	mMutex.lock();
     	this.getActivity().bindService(new Intent(this.getActivity(),SystemTapService.class), mConnection, 0);
     	
@@ -79,10 +80,11 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
     @Override
     public void onStop()
     {
+    	/* If the application immediately gets suspend, wait until the service is bounded */
     	mMutex.lock();
     	if (mSystemTapService != null)
     	{
-        	mSystemTapService.registerObserver(mModuleListAdapter);
+        	mSystemTapService.unregisterObserver(mModuleListAdapter);
     		this.getActivity().unbindService(mConnection);
     		Eventlog.d(TAG,"SystemTapService unbounded");
     		mSystemTapService = null;
@@ -103,7 +105,8 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
 		{
 			String moduleName = (String)mModuleListAdapter.getItem(pPosition);
 			Bundle args = new Bundle();
-			args.putString(SystemTapActivity.MODULE_ID_NAME, moduleName);
+			/* Pass the selected module as a parameter to the dialog */
+			args.putString(SystemTapActivity.MODULE_ID, moduleName);
 			this.getActivity().showDialog(SystemTapActivity.MODULE_DETAILS_DIALOG, args);
 		}
 		else
@@ -117,7 +120,9 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
         public void onServiceConnected(ComponentName className, IBinder service)
         {
         	mSystemTapService = ((SystemTapBinder)service).getService();
+        	/* Init the ModuleListAdapter */
         	ModulesOverviewFragment.this.mModuleListAdapter.setData(mSystemTapService.getModules());
+        	/* the ModuleListAdapter wants to get notified if the set of modules has changed */
         	mSystemTapService.registerObserver(ModulesOverviewFragment.this.mModuleListAdapter);
         	ModulesOverviewFragment.this.mMutex.unlock();
     		Eventlog.d(TAG,"SystemTapService bounded");

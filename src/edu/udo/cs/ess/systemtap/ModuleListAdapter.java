@@ -98,6 +98,7 @@ public class ModuleListAdapter extends BaseAdapter implements Observer
 		textViewModulename.setText(module.getName());
 		
 		TextView textViewModuleStatus = (TextView)itemView.findViewById(R.id.textViewModuleStatus);
+		/* Depending on a modules status set the displayed text and its color */
 		switch(module.getStatus())
 		{
 			case RUNNING:
@@ -122,6 +123,7 @@ public class ModuleListAdapter extends BaseAdapter implements Observer
 
 	public void setData(Collection<Module> pData)
 	{
+		/* Avoid raceconditions accessing mData */
 		synchronized (mData)
 		{
 			mData.clear();
@@ -133,10 +135,14 @@ public class ModuleListAdapter extends BaseAdapter implements Observer
 	@Override
 	public void update(Observable pObservable, final Object pData)
 	{
+		/* Some sanity checks to ensure pData is a Collection */
 		if (pData instanceof Collection<?>)
 		{
+			/* Avoid raceconditions accessing mData */
 			synchronized (mData)
 			{
+				/* If the adapter gets new data, a call to notifyDataSetChanged() should be done from the ui thread. */
+				/* Only the ui thread is allowed to manipulate the gui */
 				mActivity.runOnUiThread(new Runnable()
 				{
 					@Override
