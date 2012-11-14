@@ -1,2 +1,3 @@
-- logfile-Ansicht bauen
-- Module-Übersicht fertigstellen und testen
+- Fix margins in listviews
+- Add output list
+- Create own listview style --> especially choose a different selected color than white
