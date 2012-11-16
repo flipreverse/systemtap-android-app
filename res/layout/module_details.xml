@@ -2,17 +2,18 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:minHeight="100dp"
-    android:minWidth="80dp"
+    android:minHeight="170dp"
+    android:minWidth="270dp"
     android:orientation="vertical" >
 
    <TextView
-        android:id="@+id/textViewModuleDetailsHeading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:text="@string/stap_module_details_heading"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+       android:id="@+id/textViewModuleDetailsHeading"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_gravity="center_horizontal"
+       android:layout_margin="10dp"
+       android:text="@string/stap_module_details_heading"
+       android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <TableLayout
         android:id="@+id/tableLayoutModuleDetails"
@@ -28,17 +29,18 @@
 
             <TextView
                 android:id="@+id/textViewModuleDetailsName"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10"
+                android:layout_weight="4"
                 android:text="@string/stap_module_details_name"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/textViewModuleDetailsNameValue"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10"
+                android:layout_gravity="left"
+                android:layout_weight="12"
                 android:text="Medium Text"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -50,17 +52,17 @@
 
             <TextView
                 android:id="@+id/textViewModuleDetailsStatus"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10"
+                android:layout_weight="4"
                 android:text="@string/stap_module_details_status"
-    			android:textAppearance="?android:attr/textAppearanceMedium" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:id="@+id/textViewModuleDetailsStatusValue"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="10"
+                android:layout_weight="12"
                 android:text="Medium Text"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
