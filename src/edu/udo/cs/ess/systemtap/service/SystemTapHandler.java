@@ -76,6 +76,15 @@ public class SystemTapHandler extends Handler
 				}
 				else
 				{
+					try
+					{
+						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following statusupdate will fail! */
+						Thread.sleep(700);
+					}
+					catch (InterruptedException e)
+					{
+						/* We don't care :-) */
+					}
 					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), true);
 					mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
 				}
@@ -112,6 +121,20 @@ public class SystemTapHandler extends Handler
 				{
 					Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail) + ":" + modulename, Toast.LENGTH_SHORT).show();
 					Eventlog.e(TAG, "Could not run kill script (" + modulename + ")");
+				}
+				else
+				{
+					try
+					{
+						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following statusupdate will fail! */
+						Thread.sleep(700);
+					}
+					catch (InterruptedException e)
+					{
+						/* We don't care :-) */
+					}
+					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, modulename, false);
+					mModuleManagement.updateModuleStatus(modulename, moduleStatus);
 				}
 			}
 			else

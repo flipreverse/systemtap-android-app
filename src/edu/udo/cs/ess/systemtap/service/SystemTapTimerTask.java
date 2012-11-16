@@ -1,15 +1,9 @@
 package edu.udo.cs.ess.systemtap.service;
 
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.List;
 import java.util.TimerTask;
 
 import android.content.Context;
 import edu.udo.cs.ess.logging.Eventlog;
-import edu.udo.cs.ess.systemtap.Config;
 
 public class SystemTapTimerTask extends TimerTask
 {

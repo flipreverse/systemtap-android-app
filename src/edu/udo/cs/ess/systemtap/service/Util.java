@@ -303,7 +303,7 @@ public class Util
 		{
 			if (pShouldRun)
 			{
-				Eventlog.e(TAG,"module (" + pModulename + ") is running, but stap (no pid file) is not running. Updating status....");
+				Eventlog.e(TAG,"module (" + pModulename + ") is running, but stap (no pid file) is not running. Updating status.... ");
 				return Module.Status.CRASHED;
 			}
 			else
