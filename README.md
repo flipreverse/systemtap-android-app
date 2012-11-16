@@ -9,8 +9,8 @@ Set up the Android project
 
 	File --> Import --> Existing Project into Workspace --> Select root directory
 	
-The list below contains three projects. You will just need the last one, which is the actually library.
-Mark it and click on `Finish`
+ The list below contains three projects. You will just need the last one, which is the actually library.
+ Mark it and click on `Finish`
 
 3. You may need to mark it as libraray project
 
