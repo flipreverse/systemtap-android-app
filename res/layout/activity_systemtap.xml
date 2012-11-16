@@ -6,8 +6,7 @@
     <FrameLayout
         android:id="@+id/frameLayoutContentContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/stap_module_list_bg" >
+        android:layout_height="match_parent" >
 
     </FrameLayout>
 

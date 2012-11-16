@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollView1"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent" >
-
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_marginBottom="10dp"
-    android:layout_marginTop="10dp"
-    android:background="@color/stap_module_list_bg"
-    android:gravity="center"
-    android:orientation="vertical" >
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:background="@color/stap_module_list_bg"
+            android:gravity="center"
+            android:orientation="vertical" >
  
        <ListView
            android:id="@+id/listViewModules"
@@ -37,4 +31,3 @@
            android:textColor="@color/stap_module_list_text" />
 
 </LinearLayout>
-    </ScrollView>
