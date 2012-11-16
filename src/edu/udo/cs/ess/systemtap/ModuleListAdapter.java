@@ -109,7 +109,6 @@ public class ModuleListAdapter extends BaseAdapter implements Observer
 			case STOPPED:
 				textViewModuleStatus.setText(mActivity.getText(R.string.stap_module_stopped));
 				textViewModuleStatus.setTextColor(mActivity.getResources().getColor(R.color.stap_module_stopped));
-				textViewModuleStatus.setTextSize(10);
 				break;
 
 			case CRASHED:

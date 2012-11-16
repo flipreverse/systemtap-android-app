@@ -225,7 +225,6 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 						case STOPPED:
 							SystemTapActivity.this.mTextViewModuleDetailsStatus.setText(SystemTapActivity.this.getText(R.string.stap_module_stopped));
 							SystemTapActivity.this.mTextViewModuleDetailsStatus.setTextColor(SystemTapActivity.this.getResources().getColor(R.color.stap_module_stopped));
-							SystemTapActivity.this.mTextViewModuleDetailsStatus.setTextSize(10);
 							SystemTapActivity.this.mButtonModuleDetailsCtrl.setText(R.string.stap_button_start);
 							break;
 		
