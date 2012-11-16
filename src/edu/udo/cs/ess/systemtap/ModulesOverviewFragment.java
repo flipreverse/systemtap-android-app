@@ -85,7 +85,6 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
     	if (mSystemTapService != null)
     	{
         	mSystemTapService.unregisterObserver(mModuleListAdapter);
-    		this.getActivity().unbindService(mConnection);
     		Eventlog.d(TAG,"SystemTapService unbounded");
     		mSystemTapService = null;
     	}
@@ -93,6 +92,7 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
     	{
     		Eventlog.e(TAG, "mSystemTapService is null!");
     	}
+		this.getActivity().unbindService(mConnection);
     	mMutex.unlock();
     	
     	super.onStop();

@@ -25,6 +25,9 @@ import android.widget.TextView;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.service.Module;
@@ -200,6 +203,37 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	}
 
 	@Override
+    public boolean onCreateOptionsMenu(Menu pMenu)
+    {
+        MenuInflater inflater = getSupportMenuInflater();
+        inflater.inflate(R.menu.main_menu,pMenu);
+        return true;
+    }
+	
+	@Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        Intent intent = null;
+        switch (item.getItemId())
+        {
+            case R.id.menuItemExit:
+            	intent = new Intent(this,SystemTapService.class);
+            	if (mSystemTapService != null)
+            	{
+            		this.unbindService(mConnection);
+            		Eventlog.d(TAG,"SystemTapService unbounded");
+                	mSystemTapService.unregisterObserver(this);
+            		mSystemTapService = null;
+            		this.stopService(intent);
+            		this.finish();
+            	}
+            	return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+	
+	@Override
 	public void update(Observable observable, Object data)
 	{
 		this.runOnUiThread(new Runnable()
@@ -237,7 +271,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 				}
 				else
 				{
-					Eventlog.e(TAG, "update(): mSelectedModule is null");
+					Eventlog.d(TAG, "update(): mSelectedModule is null");
 				}
 			}
 		});
