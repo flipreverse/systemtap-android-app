@@ -2,6 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_gravity="center_horizontal"
+    android:background="@color/stap_logfile_list_bg"
     android:orientation="vertical" >
 
     <Spinner
@@ -10,24 +12,16 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp" />
 
-    <ScrollView
-        android:id="@+id/scrollView1"
+    <ListView
+        android:id="@+id/listViewFileList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" 
-        android:background="@color/stap_module_list_bg">
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:dividerHeight="8dp" 
+           android:fadingEdge="vertical"
+           android:fadingEdgeLength="10dp"
+           android:longClickable="true">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" >
-
-            <ListView
-                android:id="@+id/listViewFileList"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="10dp"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_weight="1" >
             </ListView>
 	<TextView
 	           android:id="@android:id/empty"
@@ -38,7 +32,4 @@
 	           android:text="@string/stap_logfile_list_empty"
 	           android:textAppearance="?android:attr/textAppearanceMedium"
 	           android:textColor="@color/stap_module_list_text" />
-        </LinearLayout>
-    </ScrollView>
-
 </LinearLayout>

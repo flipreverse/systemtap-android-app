@@ -8,5 +8,6 @@
     <color name="stap_module_list_text">#ffffff</color>
     <color name="stap_module_list_divider">#B0B0B0</color>
     <color name="stap_logfile_list_text">#ffffff</color>
+    <color name="stap_logfile_list_bg">#000000</color>
     
 </resources>

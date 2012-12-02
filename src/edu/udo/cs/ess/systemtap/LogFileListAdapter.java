@@ -94,8 +94,9 @@ public class LogFileListAdapter extends BaseAdapter
 		String fileName = file.getName();
 		/* Strip off the extension */
 		fileName = fileName.substring(0,fileName.lastIndexOf('.'));
+		int dateEndPos = fileName.lastIndexOf('_') - 1;
 		/* extract the date */
-		String date = fileName.substring(fileName.indexOf('_') + 1,fileName.lastIndexOf('_'));
+		String date = fileName.substring(fileName.lastIndexOf('_',dateEndPos) + 1,dateEndPos + 1);
 		/* extract the time */
 		String time = fileName.substring(fileName.lastIndexOf('_') + 1);
 		time = time.replace(".", ":");

@@ -120,6 +120,8 @@ public class LogFilesOverviewFragment extends SherlockFragment implements OnItem
 			Bundle args = new Bundle();
 			/* Pass the selected file as a parameter to the dialog */
 			args.putSerializable(SystemTapActivity.LOGFILE_OBJECT, file);
+			String name = (String)mSpinnerModules.getSelectedItem();
+			args.putString(SystemTapActivity.MODULE_ID, name);
 			this.getActivity().showDialog(SystemTapActivity.LOGFILE_DETAILS_DIALOG, args);
 		}
 		else

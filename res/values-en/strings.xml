@@ -19,6 +19,7 @@
     <string name="stap_module_stopped">stopped</string>
     <string name="stap_module_list_empty">No modules available</string>
     <string name="stap_logfile_list_empty">No logfiles found</string>
+    <string name="stap_logfile_details_filenotfound">Logfile does not exist</string>
     <string name="stap_button_ok">OK</string>
     <string name="stap_button_start">Start</string>
     <string name="stap_button_stop">Stop</string>

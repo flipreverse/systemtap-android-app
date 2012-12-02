@@ -280,10 +280,11 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	@Override
 	public void onPrepareDialog(int pID, Dialog pDialog, Bundle pArgs)
 	{
+		String moduleName = null;
 		switch(pID)
 		{
 			case MODULE_DETAILS_DIALOG:
-				String moduleName = pArgs.getString(SystemTapActivity.MODULE_ID);
+				moduleName = pArgs.getString(SystemTapActivity.MODULE_ID);
 				if (moduleName == null)
 				{
 					Eventlog.e(TAG, "onPrepareDialog(): moduleName is null");
@@ -322,9 +323,26 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 				
 			case LOGFILE_DETAILS_DIALOG:
 				final File file = (File)pArgs.getSerializable(SystemTapActivity.LOGFILE_OBJECT);
+				moduleName = pArgs.getString(SystemTapActivity.MODULE_ID);
 				if (file == null)
 				{
 					Eventlog.e(TAG,"file not given");
+					break;
+				}
+				/* Get file name */
+				String fileName = file.getName();
+				/* Strip off the extension */
+				fileName = fileName.substring(0,fileName.lastIndexOf('.'));
+				int dateEndPos = fileName.lastIndexOf('_') - 1;
+				/* extract the date */
+				String date = fileName.substring(fileName.lastIndexOf('_',dateEndPos) + 1,dateEndPos + 1);
+				/* extract the time */
+				String time = fileName.substring(fileName.lastIndexOf('_') + 1);
+				time = time.replace(".", ":");
+				mTextViewLogFileDetailsHeading.setText(moduleName + "\n" + date + " " + time);
+				if (!file.exists())
+				{
+					mTextViewLogFileDetailsContent.setText(R.string.stap_logfile_details_filenotfound);
 					break;
 				}
 				mTextViewLogFileDetailsContent.setText("");
@@ -349,7 +367,6 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 						}
 					}
 				});
-				mTextViewLogFileDetailsHeading.setText(file.getName());
 				break;
 			
 			default:
