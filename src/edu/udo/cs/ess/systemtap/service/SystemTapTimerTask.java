@@ -21,30 +21,17 @@ public class SystemTapTimerTask extends TimerTask
 	@Override
 	public void run()
 	{
-		Module.Status moduleStatus;
+		Module.Status moduleNewStatus;
 		
 		Eventlog.d(TAG, "Check if modules (" + mModuleManagement.getModules().size() + ") status is still up to date");
 		for(Module module:mModuleManagement.getModules())
 		{
 			Eventlog.d(TAG,"Current module: " + module.getName() + ",  status=" + module.getStatus());
-			moduleStatus = module.getStatus();
-			switch (module.getStatus())
-			{
-				case RUNNING:
-					moduleStatus = Util.checkModuleStatus(mContext, module.getName(), true);
-					break;
-					
-				case STOPPED:
-					moduleStatus = Util.checkModuleStatus(mContext, module.getName(), false);
-					break;
-					
-				case CRASHED:
-					break;
-			}
-			if (module.getStatus() != moduleStatus)
+			moduleNewStatus = Util.checkModuleStatus(mContext, module.getName(), module.getStatus());
+			if (module.getStatus() != moduleNewStatus)
 			{
 				Eventlog.d(TAG,"modules (" + module.getName() + ") status has changed. Updating database...");
-				mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
+				mModuleManagement.updateModuleStatus(module.getName(), moduleNewStatus);
 			}
 		}
 	}

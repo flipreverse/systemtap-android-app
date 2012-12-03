@@ -78,14 +78,14 @@ public class SystemTapHandler extends Handler
 				{
 					try
 					{
-						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following statusupdate will fail! */
-						Thread.sleep(700);
+						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
+						Thread.sleep(900);
 					}
 					catch (InterruptedException e)
 					{
 						/* We don't care :-) */
 					}
-					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), true);
+					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), Module.Status.RUNNING);
 					mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
 				}
 			}
@@ -126,14 +126,14 @@ public class SystemTapHandler extends Handler
 				{
 					try
 					{
-						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following statusupdate will fail! */
+						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
 						Thread.sleep(700);
 					}
 					catch (InterruptedException e)
 					{
 						/* We don't care :-) */
 					}
-					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, modulename, false);
+					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, modulename, Module.Status.STOPPED);
 					mModuleManagement.updateModuleStatus(modulename, moduleStatus);
 				}
 			}

@@ -254,10 +254,10 @@ public class Util
 	 * First check if pid file exists. Second, read its content and query system wether the pid belongs a running process.
 	 * @param pContext the activities context
 	 * @param pModulename the modulename which status the caller wants to know
-	 * @param pShouldRun true if the service expects this module running
+	 * @param pStatus the expected status
 	 * @return Returns new module state
 	 */
-	public static Module.Status checkModuleStatus(Context pContext, String pModulename, boolean pShouldRun)
+	public static Module.Status checkModuleStatus(Context pContext, String pModulename, Module.Status pStatus)
 	{
 		File pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + pModulename + Config.PID_EXT);
 		if (pidFile.exists())
@@ -266,29 +266,37 @@ public class Util
 			{
 				if (Util.isPidFilePidValid(pContext,pidFile))
 				{
-					if (pShouldRun)
+					switch (pStatus)
 					{
-						Eventlog.d(TAG,"module (" + pModulename + ") is running and pid file exists. all fine. :-)");
-						return Module.Status.RUNNING;
-					}
-					else
-					{
-						Eventlog.e(TAG,"module (" + pModulename + ") is stopped, but stap is running. Updating status...");
-						return Module.Status.RUNNING;
+						case RUNNING:
+							Eventlog.d(TAG,"module (" + pModulename + ") status is running and pid file exists. all fine. :-)");
+							return Module.Status.RUNNING;
+							
+						case STOPPED:
+							Eventlog.e(TAG,"module (" + pModulename + ") status is stopped, but stap is running. Updating status...");
+							return Module.Status.RUNNING;
+							
+						case CRASHED:
+							Eventlog.e(TAG,"module (" + pModulename + ") status is crasehd, but stap is running. Updating status...");
+							return Module.Status.RUNNING;
 					}
 				}
 				else
 				{
-					if (pShouldRun)
+					switch (pStatus)
 					{
-						Eventlog.e(TAG,"module (" + pModulename + ") is running, but stap is not running. Updating status....");
-						Eventlog.e(TAG,"module (" + pModulename + ") is crashed. Removing pid file: " + pidFile.delete());
-						return Module.Status.CRASHED;
-					}
-					else
-					{
-						Eventlog.d(TAG,"module (" + pModulename + ") is stopped, but pidfile exsits. Deleting it: " + pidFile.delete());
-						return Module.Status.STOPPED;
+						case RUNNING:
+							Eventlog.e(TAG,"module (" + pModulename + ") status is running, but stap is not running. Updating status....");
+							Eventlog.e(TAG,"module (" + pModulename + ") status is crashed. Removing pid file: " + pidFile.delete());
+							return Module.Status.CRASHED;
+							
+						case STOPPED:
+							Eventlog.d(TAG,"module (" + pModulename + ") status is stopped, but pidfile exsits. Deleting it: " + pidFile.delete());
+							return Module.Status.STOPPED;
+							
+						case CRASHED:
+							Eventlog.d(TAG,"module (" + pModulename + ") status is crashed, but pidfile exsits. Deleting it: " + pidFile.delete());
+							return Module.Status.CRASHED;
 					}
 				}
 			}
@@ -301,16 +309,23 @@ public class Util
 		}
 		else
 		{
-			if (pShouldRun)
+			switch (pStatus)
 			{
-				Eventlog.e(TAG,"module (" + pModulename + ") is running, but stap (no pid file) is not running. Updating status.... ");
-				return Module.Status.CRASHED;
-			}
-			else
-			{
-				Eventlog.d(TAG,"module (" + pModulename + ") is stopped and no pid file exists. all fine. :-)");
-				return Module.Status.STOPPED;
+				case RUNNING:
+					Eventlog.e(TAG,"module (" + pModulename + ") status is running, but stap (no pid file) is not running. Updating status.... ");
+					return Module.Status.CRASHED;
+					
+				case STOPPED:
+					Eventlog.d(TAG,"module (" + pModulename + ") status is stopped and no pid file exists. all fine. :-)");
+					return Module.Status.STOPPED;
+					
+				case CRASHED:
+					Eventlog.d(TAG,"module (" + pModulename + ") status is crashed and no pid file exists. all fine. :-)");
+					return Module.Status.CRASHED;
 			}
 		}
+		/* Although i hate this kind of comments: this should never happen */
+		Eventlog.e(TAG,"checkModuleStatus() reached end of function. Module: " + pModulename + ", Status: " + pStatus);
+		return Module.Status.STOPPED;
 	}
 }

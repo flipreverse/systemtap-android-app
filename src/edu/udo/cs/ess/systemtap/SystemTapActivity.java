@@ -73,7 +73,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 		this.getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 		
         mMutex = new ReentrantLock();
-	    
+
 	    /* Add the module overview tab */
         ActionBar.Tab tab = this.getSupportActionBar().newTab();
         tab.setText(this.getText(R.string.stap_module));
