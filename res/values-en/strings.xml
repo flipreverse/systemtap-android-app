@@ -6,7 +6,7 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_exit">Exit</string>
     <string name="stap_service_started">SystemTap service has been started!</string>
-    <string name="stap_service_running">The SystemTap service is running in background.</string>
+    <string name="stap_service_running">SystemTap service is running.</string>
     <string name="stap_service_detail_info">For further information tap hier.</string>
     <string name="stap_service_start_failed">SystemTap service could not be initialized.</string>
     <string name="stap_service_terminated">SystemTap service terminated</string>
