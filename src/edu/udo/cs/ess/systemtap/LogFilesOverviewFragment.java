@@ -154,6 +154,27 @@ public class LogFilesOverviewFragment extends SherlockFragment implements OnItem
 		}	
 	}
 
+	public void refreshFileList()
+	{
+		if (mSystemTapService == null)
+		{
+			Eventlog.e(TAG,"refreshFileList(): mSystemTapService is null");
+			return;
+		}
+		String moduleName = (String)mSpinnerModules.getSelectedItem();
+		if (moduleName != null)
+		{
+			/* Get all logfiles for this module and pass them to the underlying adapter */
+			File logFiles[] = mSystemTapService.getLogFiles(moduleName);
+			mLogFileListAdapter.setData(logFiles);
+		}
+		else
+		{
+			/* The dummy item was selected, no files to display */
+			Eventlog.d(TAG,"Dummy item selected");
+		}
+	}
+
 	@Override
 	public void onNothingSelected(AdapterView<?> pParent)
 	{

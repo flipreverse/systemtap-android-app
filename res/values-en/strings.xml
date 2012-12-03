@@ -5,6 +5,7 @@
     <string name="stap_outputfiles">Output</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_exit">Exit</string>
+    <string name="menu_refresh">Refresh</string>
     <string name="stap_service_started">SystemTap service has been started!</string>
     <string name="stap_service_running">SystemTap service is running.</string>
     <string name="stap_service_detail_info">For further information tap hier.</string>
@@ -19,7 +20,7 @@
     <string name="stap_module_crashed">crashed</string>
     <string name="stap_module_stopped">stopped</string>
     <string name="stap_module_list_empty">No modules available</string>
-    <string name="stap_logfile_list_empty">No logfiles found</string>
+    <string name="stap_logfile_list_empty">No files found</string>
     <string name="stap_logfile_details_filenotfound">Logfile does not exist</string>
     <string name="stap_button_ok">OK</string>
     <string name="stap_button_start">Start</string>

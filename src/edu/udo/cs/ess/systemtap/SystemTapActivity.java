@@ -220,6 +220,16 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
     }
 	
 	@Override
+	public boolean onPrepareOptionsMenu(Menu pMenu)
+	{
+        ActionBar actionBar = this.getSupportActionBar();
+        MenuItem item = pMenu.findItem(R.id.menuItemRefresh); 
+        boolean visible = actionBar.getSelectedTab().getTag() == mOutputFilesOverviewFragment || actionBar.getSelectedTab().getTag() == mLogFilesOverviewFragment;
+        item.setVisible(visible);
+        return true;
+	}
+	
+	@Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
         Intent intent = null;
@@ -235,6 +245,19 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
             		mSystemTapService = null;
             		this.stopService(intent);
             		this.finish();
+            	}
+            	return true;
+            case R.id.menuItemRefresh:
+                ActionBar actionBar = this.getSupportActionBar();
+            	if (actionBar.getSelectedTab().getTag() == mOutputFilesOverviewFragment)
+            	{
+            		Eventlog.d(TAG, "Refreshing output file list");
+            		mOutputFilesOverviewFragment.refreshFileList();            		
+            	}
+            	else if (actionBar.getSelectedTab().getTag() == mLogFilesOverviewFragment)
+            	{
+            		Eventlog.d(TAG, "Refreshing log file list");
+            		mLogFilesOverviewFragment.refreshFileList();
             	}
             	return true;
             default:

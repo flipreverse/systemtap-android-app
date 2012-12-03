@@ -139,8 +139,8 @@ public class OutputFilesOverviewFragment extends SherlockFragment implements OnI
 			if (moduleName != null)
 			{
 				/* Get all logfiles for this module and pass them to the underlying adapter */
-				File logFiles[] = mSystemTapService.getOutputFiles(moduleName);
-				mOutputFileListAdapter.setData(logFiles);
+				File outputFiles[] = mSystemTapService.getOutputFiles(moduleName);
+				mOutputFileListAdapter.setData(outputFiles);
 			}
 			else
 			{
@@ -154,6 +154,27 @@ public class OutputFilesOverviewFragment extends SherlockFragment implements OnI
 		}	
 	}
 
+	public void refreshFileList()
+	{
+		if (mSystemTapService == null)
+		{
+			Eventlog.e(TAG,"refreshFileList(): mSystemTapService is null");
+			return;
+		}
+		String moduleName = (String)mSpinnerModules.getSelectedItem();
+		if (moduleName != null)
+		{
+			/* Get all logfiles for this module and pass them to the underlying adapter */
+			File outputFiles[] = mSystemTapService.getOutputFiles(moduleName);
+			mOutputFileListAdapter.setData(outputFiles);
+		}
+		else
+		{
+			/* The dummy item was selected, no files to display */
+			Eventlog.d(TAG,"Dummy item selected");
+		}
+	}
+	
 	@Override
 	public void onNothingSelected(AdapterView<?> pParent)
 	{
