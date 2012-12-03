@@ -29,7 +29,7 @@ public class LogFilesOverviewFragment extends SherlockFragment implements OnItem
 	
 	private SystemTapService mSystemTapService;
 	private ReentrantLock mMutex;
-	private LogFileListAdapter mLogFileListAdapter;
+	private FileListAdapter mLogFileListAdapter;
 	private ListView mListViewModules;
 	private int mListViewID;
 	private ModuleSpinnerAdapter mModuleSpinnerAdapter;
@@ -51,7 +51,7 @@ public class LogFilesOverviewFragment extends SherlockFragment implements OnItem
         mMutex = new ReentrantLock();
 		this.getActivity().setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light_DarkActionBar);
 		
-        mLogFileListAdapter = new LogFileListAdapter(this.getActivity());
+        mLogFileListAdapter = new FileListAdapter(this.getActivity());
         mListViewModules = (ListView)this.getActivity().findViewById(R.id.listViewFileList);
 		mListViewModules.setEmptyView(this.getActivity().findViewById(android.R.id.empty));
 		mListViewModules.setAdapter(mLogFileListAdapter);

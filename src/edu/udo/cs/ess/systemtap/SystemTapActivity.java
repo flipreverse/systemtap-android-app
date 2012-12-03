@@ -47,6 +47,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	
 	private ModulesOverviewFragment mModulesOverviewFragement;
 	private LogFilesOverviewFragment mLogFilesOverviewFragment;
+	private OutputFilesOverviewFragment mOutputFilesOverviewFragment;
 	private ReentrantLock mMutex;
     private SystemTapService mSystemTapService;
     
@@ -87,6 +88,14 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
         tab.setTabListener(this);
         mLogFilesOverviewFragment = (LogFilesOverviewFragment) Fragment.instantiate(this, LogFilesOverviewFragment.class.getName());
         tab.setTag(mLogFilesOverviewFragment);
+        this.getSupportActionBar().addTab(tab);
+        
+        /* Add the outputfile overview tab */
+        tab = this.getSupportActionBar().newTab();
+        tab.setText(this.getText(R.string.stap_outputfiles));
+        tab.setTabListener(this);
+        mOutputFilesOverviewFragment = (OutputFilesOverviewFragment) Fragment.instantiate(this, OutputFilesOverviewFragment.class.getName());
+        tab.setTag(mOutputFilesOverviewFragment);
         this.getSupportActionBar().addTab(tab);
         
         mSelectedModule = null;

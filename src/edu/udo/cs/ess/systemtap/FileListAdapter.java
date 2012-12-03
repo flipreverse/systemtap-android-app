@@ -16,15 +16,15 @@ import android.widget.TextView;
  * @author alex
  *
  */
-public class LogFileListAdapter extends BaseAdapter
+public class FileListAdapter extends BaseAdapter
 {
-	private static final String TAG = LogFileListAdapter.class.getSimpleName();
+	private static final String TAG = FileListAdapter.class.getSimpleName();
 	
 	private ArrayList<File> mData;
 	private Activity mActivity;
 	private LayoutInflater mLayoutInflater;
 	
-	public LogFileListAdapter(Activity pContext)
+	public FileListAdapter(Activity pContext)
 	{
 		mData = new ArrayList<File>();
 		mActivity = pContext;
