@@ -67,7 +67,10 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        if(android.os.Build.VERSION.SDK_INT < 11)
+        {
+        	this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        }
 		this.setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light_DarkActionBar);
 		this.setContentView(R.layout.activity_systemtap);
 		this.getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
