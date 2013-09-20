@@ -148,6 +148,7 @@ public class ModuleListAdapter extends BaseAdapter implements Observer
 					public void run()
 					{
 						Collection<Module> newData = (Collection<Module>)pData;
+
 						ModuleListAdapter.this.mData.clear();
 						ModuleListAdapter.this.mData.addAll(newData);
 						ModuleListAdapter.this.notifyDataSetChanged();

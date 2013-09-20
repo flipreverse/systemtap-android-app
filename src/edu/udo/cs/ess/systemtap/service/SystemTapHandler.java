@@ -8,10 +8,16 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.Timer;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.preference.PreferenceManager;
 import android.widget.Toast;
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
@@ -30,12 +36,21 @@ public class SystemTapHandler extends Handler
 
 	private ModuleManagement mModuleManagement;
 	private SystemTapService mSystemTapService;
+	private Timer mTimer;
+	private SystemTapTimerTask mSystemtTapTimerTask;
+	private WakeLock mWakeLock;
+	private int mNoRunning;
 
 	public SystemTapHandler(Looper pLooper,SystemTapService pSystemTapService,ModuleManagement pModuleManagetment)
 	{
 		super(pLooper);
 		mSystemTapService = pSystemTapService;
 		mModuleManagement = pModuleManagetment;
+		PowerManager powerManager = (PowerManager)mSystemTapService.getSystemService(Context.POWER_SERVICE);
+		mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"SystemTap WakeLock");
+		mTimer = new Timer("SystemTapTimer",true);
+		mSystemtTapTimerTask = new SystemTapTimerTask(mModuleManagement,mSystemTapService,this);
+		mNoRunning = 0;
 	}
 	
 	@Override
@@ -87,6 +102,9 @@ public class SystemTapHandler extends Handler
 					}
 					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), Module.Status.RUNNING);
 					mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
+					if (moduleStatus == Module.Status.RUNNING) {
+						this.incrementRunningModules();
+					}
 				}
 			}
 			else
@@ -135,6 +153,9 @@ public class SystemTapHandler extends Handler
 					}
 					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, modulename, Module.Status.STOPPED);
 					mModuleManagement.updateModuleStatus(modulename, moduleStatus);
+					if (moduleStatus == Module.Status.STOPPED) {
+						this.decrementRunningModules();
+					}
 				}
 			}
 			else
@@ -143,6 +164,37 @@ public class SystemTapHandler extends Handler
 				Eventlog.e(TAG, "Could not stop module - selected module (" + modulename + ") is not running");
 			}
 			break;
+		}
+	}
+	
+	public void decrementRunningModules() {
+		synchronized (mTimer) {
+			mNoRunning--;
+			if (mNoRunning == 0) {
+					mSystemtTapTimerTask.cancel();
+					mTimer.cancel();
+					mTimer.purge();
+					Eventlog.d(TAG,"Last running module stopped. Canceled timer.");
+		            if (mWakeLock.isHeld()){
+		            	mWakeLock.release();
+		            	Eventlog.d(TAG,"Released wake lock");
+		            }
+			}
+		}
+	}
+	
+	public void incrementRunningModules() {
+		synchronized (mTimer) {
+			if (mNoRunning == 0) {
+					Eventlog.d(TAG,"First module started. Starting timer task.");
+					mTimer.schedule(mSystemtTapTimerTask, 10 * 1000, Config.TIMER_TASK_PERIOD);
+					SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
+		            if (settings.getBoolean(mSystemTapService.getString(R.string.pref_wakelock), false)){
+		            	Eventlog.d(TAG,"Acquire wake lock");
+		            	mWakeLock.acquire();
+		            }
+			}
+			mNoRunning++;
 		}
 	}
 }

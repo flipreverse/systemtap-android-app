@@ -71,7 +71,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
         {
         	this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         }
-		this.setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light_DarkActionBar);
+		this.setTheme(com.actionbarsherlock.R.style.Theme_Sherlock);
 		this.setContentView(R.layout.activity_systemtap);
 		this.getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 		
@@ -102,30 +102,6 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
         this.getSupportActionBar().addTab(tab);
         
         mSelectedModule = null;
-	}
-
-	@Override
-	public void onTabReselected(Tab tab, FragmentTransaction transaction)
-	{
-
-	}
-	
-	@Override
-	public void onTabSelected(Tab tab, FragmentTransaction transaction)
-	{
-		if (tab == null || transaction == null)
-		{
-			Eventlog.e(TAG,"tab null");
-			return;
-		}
-
-		transaction.replace(R.id.frameLayoutContentContainer, (Fragment) tab.getTag());
-	}
-	
-	@Override
-	public void onTabUnselected(Tab tab, FragmentTransaction transaction)
-	{
-		
 	}
 	
 	public void onClick(View pView)
@@ -262,6 +238,11 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
             		Eventlog.d(TAG, "Refreshing log file list");
             		mLogFilesOverviewFragment.refreshFileList();
             	}
+            	return true;
+            case R.id.menuItemSettings:
+            	intent = new Intent(this, SettingsActivity.class);
+    			intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+    			this.startActivity(intent);
             	return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -468,4 +449,29 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
         	mSystemTapService = null;
         }
     };
+
+    @Override
+    public void onTabReselected(Tab tab, FragmentTransaction transaction)
+    {
+    
+    }
+
+	@Override
+	public void onTabSelected(Tab tab, FragmentTransaction transaction)
+	{
+		if (tab == null || transaction == null)
+		{
+			Eventlog.e(TAG,"tab null");
+			return;
+		}
+
+		transaction.replace(R.id.frameLayoutContentContainer, (Fragment) tab.getTag());
+	}
+       
+	@Override
+	public void onTabUnselected(Tab tab, FragmentTransaction transaction)
+	{
+	               
+	}
+
 }

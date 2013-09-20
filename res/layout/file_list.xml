@@ -17,10 +17,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:dividerHeight="8dp" 
-           android:fadingEdge="vertical"
-           android:fadingEdgeLength="10dp"
-           android:longClickable="true">
+        android:dividerHeight="8dp"
+        android:fadingEdge="vertical"
+        android:fadingEdgeLength="10dp"
+        android:listSelector="@drawable/liststyle"
+        android:longClickable="true" >
 
             </ListView>
 	<TextView

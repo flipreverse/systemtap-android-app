@@ -1,12 +1,19 @@
 package edu.udo.cs.ess.systemtap.service;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import android.os.FileObserver;
+
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 
@@ -75,7 +82,31 @@ public class ModuleManagement extends Observable
 		}
 	}
 	
-	public synchronized void updateModules()
+	public void save() {
+		for (Module module : mModules.values()) {
+			
+			File moduleConfFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + module.getName()  + Config.MODULE_CONF_FILE_EXT);
+			try {
+				JsonWriter writer = new JsonWriter(new FileWriter(moduleConfFile));
+				writer.beginObject();
+				writer.name(Config.MODULE_CONF_FILE_ENTRY_STATUS).value(module.getStatus().name());
+				writer.endObject();
+				writer.close();
+			} catch (IOException e) {
+				Eventlog.e(TAG,"save(): Can't save modules meta information: " + moduleConfFile.getAbsolutePath());
+			}
+		}
+	}
+	
+	public void load() {
+		this.updateModules(true);
+	}
+	
+	public synchronized void updateModules(){
+		this.updateModules(false);
+	}
+
+	private synchronized void updateModules(boolean pLoadConf) 
 	{
 		boolean changed = false;
 		
@@ -96,16 +127,42 @@ public class ModuleManagement extends Observable
 			String filename = moduleFile.getName();
 			String modulename = filename.substring(0, filename.indexOf(Config.MODULE_EXT));
 			Eventlog.d(TAG, "Does " + modulename + " exist in database?");
-			if (mModules.get(modulename) == null)
+			Module module = mModules.get(modulename);
+			if (module == null)
 			{
 				Eventlog.d(TAG,"No, create a new module (" + modulename + ")");
-				this.createModule(modulename);
+				module = this.createModule(modulename);
 				changed = true;
 			}
 			else
 			{
 				//TODO: do a md5 check of file content
 				Eventlog.d(TAG,"Yes, doing nothing");
+			}
+			if (pLoadConf) {
+				Eventlog.d(TAG,"Reading module conf file...");
+				File moduleConfFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + module.getName() + Config.MODULE_CONF_FILE_EXT);
+				try {
+					JsonReader reader = new JsonReader(new FileReader(moduleConfFile));
+					reader.beginObject();
+					while (reader.hasNext()) {
+						String entryName = reader.nextName(), statusText = "";
+						if (entryName.equalsIgnoreCase(Config.MODULE_CONF_FILE_ENTRY_STATUS)) {
+							statusText = reader.nextString();
+							if (statusText.equalsIgnoreCase(Module.Status.STOPPED.name())) {
+								module.setStatus(Module.Status.STOPPED);
+							} else if (statusText.equalsIgnoreCase(Module.Status.RUNNING.name())) {
+								module.setStatus(Module.Status.RUNNING);
+							} else if (statusText.equalsIgnoreCase(Module.Status.CRASHED.name())) {
+								module.setStatus(Module.Status.CRASHED);
+							}
+						}
+					}
+					reader.endObject();
+					reader.close();
+				} catch (IOException e) {
+					Eventlog.e(TAG,"updateModules(): Can't parse module config: " + moduleConfFile.getAbsolutePath());
+				}
 			}
 		}
 		

@@ -2,5 +2,8 @@
 
     <string name="app_name">SystemTap</string>
     <string name="title_activity_systemtap">SystemTap</string>
-
+	<string name="pref_wakelock">useWakeLock</string>
+	<string name="pref_autostart">autostartAtBoot</string>
+	<string name="pref_daemon_port">transmitDaemonPort</string>
+	<string name="pref_restore_modules">restoreModulesBoot</string>
 </resources>

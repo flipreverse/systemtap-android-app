@@ -16,11 +16,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 import edu.udo.cs.ess.logging.Eventlog;
@@ -30,14 +32,12 @@ import edu.udo.cs.ess.systemtap.SystemTapActivity;
 
 public class SystemTapService extends Service
 {
-	private static final String TAG = SystemTapService.class.getSimpleName();
+	public static final String TAG = SystemTapService.class.getSimpleName();
 	private static final int NOTIFICATION_ID = 0x4711;
 	
 	private SystemTapHandler mSystemTapHandler;
 	private SystemTapBinder mSystemTapBinder;
-	private ModuleManagement mModuleManagetment;
-	private Timer mTimer;
-	private SystemTapTimerTask mSystemtTapTimerTask;
+	private ModuleManagement mModuleManagement;
 	private boolean mInitFailed;
 	private boolean mInit;
 	
@@ -50,12 +50,26 @@ public class SystemTapService extends Service
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
-	{		
-		/*Message msg = service_handler.obtainMessage();
-		msg.arg1 = startId;
-		service_handler.sendMessage(msg);*/
+	{
+		if (intent == null) {
+			return START_STICKY;
+		}
 
-	    return super.onStartCommand(intent, flags, startId);
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        if (settings.getBoolean(this.getString(R.string.pref_restore_modules), false)) {
+        	this.restoreModules();
+        } else {
+			Eventlog.d(TAG,"No restore wanted, reset running modules to stopped.");
+        	// No restore, set all running modules to stopped
+    		for (Module module : mModuleManagement.getModules()) {
+    			if (module.getStatus() == Module.Status.RUNNING) {
+    				Eventlog.e(TAG,module.getName());
+    				mModuleManagement.updateModuleStatus(module.getName(),Module.Status.STOPPED);
+    			}
+    		}
+        }
+
+	    return START_STICKY;
 	}
 	
 	@Override
@@ -103,10 +117,8 @@ public class SystemTapService extends Service
 			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return;
 		}
-		
-	    mSystemtTapTimerTask.cancel();
-	    mTimer.cancel();
-	    mTimer.purge();
+
+		mModuleManagement.save();
 	    this.stopAllModules();
 	    
 		super.onDestroy();
@@ -156,7 +168,7 @@ public class SystemTapService extends Service
 			return null;
 		}
 		
-		return mModuleManagetment.getModule(pName);
+		return mModuleManagement.getModule(pName);
 	}
 	
 	public Collection<Module> getModules()
@@ -167,7 +179,7 @@ public class SystemTapService extends Service
 			return null;
 		}
 		
-		return mModuleManagetment.getModules();
+		return mModuleManagement.getModules();
 	}
 	
 	public File[] getLogFiles(final String pModulename)
@@ -228,7 +240,7 @@ public class SystemTapService extends Service
 			return;
 		}
 		
-		mModuleManagetment.addObserver(pObserver);
+		mModuleManagement.addObserver(pObserver);
 	}
 	
 	public void unregisterObserver(Observer pObserver)
@@ -239,7 +251,7 @@ public class SystemTapService extends Service
 			return;
 		}
 		
-		mModuleManagetment.deleteObserver(pObserver);
+		mModuleManagement.deleteObserver(pObserver);
 	}
 	/* END - PUBLIC INTERFACE */
 	
@@ -314,13 +326,10 @@ public class SystemTapService extends Service
 		HandlerThread thread = new HandlerThread("Service Worker",android.os.Process.THREAD_PRIORITY_BACKGROUND);
 		thread.start();
 		
-		mModuleManagetment = new ModuleManagement();
-		mModuleManagetment.updateModules();
-		mSystemTapHandler = new SystemTapHandler(thread.getLooper(),this,mModuleManagetment);
+		mModuleManagement = new ModuleManagement();
+		mModuleManagement.load();
+		mSystemTapHandler = new SystemTapHandler(thread.getLooper(),this,mModuleManagement);
 		mSystemTapBinder = new SystemTapBinder(this);
-		mTimer = new Timer("SystemTapTimer",true);
-		mSystemtTapTimerTask = new SystemTapTimerTask(mModuleManagetment,this);
-		mTimer.schedule(mSystemtTapTimerTask, 10 * 1000, Config.TIMER_TASK_PERIOD);
 		mInit = true;
 		
 		Eventlog.d(TAG,"Make sure that no stap process is already running at service startup");
@@ -340,7 +349,7 @@ public class SystemTapService extends Service
 	private void stopAllModules()
 	{
 		Eventlog.d(TAG, "Stopping all modules...");
-		for(Module module:mModuleManagetment.getModules())
+		for(Module module:mModuleManagement.getModules())
 		{
 			if (module.getStatus() == Module.Status.RUNNING)
 			{
@@ -348,5 +357,17 @@ public class SystemTapService extends Service
 				this.stopModule(module.getName());
 			}
 		}		
+	}
+	
+	private void restoreModules() {
+		Eventlog.d(TAG,"Restoring modules...");
+		for (Module module : mModuleManagement.getModules()) {
+			if (module.getStatus() == Module.Status.RUNNING) {
+				Eventlog.d(TAG,"Module " + module.getName() + " was running on last shutdown. Restarting...");
+				this.startModule(module.getName());
+			} else {
+				Eventlog.d(TAG,"Module " + module.getName() + " was not running on last shutdown.");
+			}
+		}
 	}
 }

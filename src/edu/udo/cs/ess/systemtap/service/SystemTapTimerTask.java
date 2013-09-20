@@ -11,11 +11,13 @@ public class SystemTapTimerTask extends TimerTask
 	
 	private ModuleManagement mModuleManagement;
 	private Context mContext;
+	private SystemTapHandler mSystemTapHandler;
 	
-	public SystemTapTimerTask(ModuleManagement pModuleManagement,Context pContext)
+	public SystemTapTimerTask(ModuleManagement pModuleManagement,Context pContext, SystemTapHandler pSystemTapHandler)
 	{
 		mModuleManagement = pModuleManagement;
 		mContext = pContext;
+		mSystemTapHandler = pSystemTapHandler;
 	}
 	
 	@Override
@@ -31,6 +33,12 @@ public class SystemTapTimerTask extends TimerTask
 			if (module.getStatus() != moduleNewStatus)
 			{
 				Eventlog.d(TAG,"modules (" + module.getName() + ") status has changed. Updating database...");
+				// Since we just get here in case the module status has changed, it is just necessary to check moduleNewStatus.
+				if (moduleNewStatus == Module.Status.STOPPED || moduleNewStatus == Module.Status.CRASHED) {
+					mSystemTapHandler.decrementRunningModules();
+				} else if (moduleNewStatus == Module.Status.RUNNING) {
+					mSystemTapHandler.incrementRunningModules();
+				}
 				mModuleManagement.updateModuleStatus(module.getName(), moduleNewStatus);
 			}
 		}

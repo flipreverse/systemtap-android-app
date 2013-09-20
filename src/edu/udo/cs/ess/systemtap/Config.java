@@ -51,5 +51,9 @@ public class Config
 	
 	public static final String BUSYBOX_NAME = "busybox";
 	
+	public static final String MODULE_CONF_FILE_EXT = ".txt";
+	
+	public static final String MODULE_CONF_FILE_ENTRY_STATUS = "status";
+	
 	public static final int TIMER_TASK_PERIOD = 5 * 60 * 1000;
 }

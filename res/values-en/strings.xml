@@ -6,6 +6,7 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_exit">Exit</string>
     <string name="menu_refresh">Refresh</string>
+    <string name="menu_settings">Settings</string>
     <string name="stap_service_started">SystemTap service has been started!</string>
     <string name="stap_service_running">SystemTap service is running.</string>
     <string name="stap_service_detail_info">For further information tap hier.</string>
@@ -28,4 +29,12 @@
     <string name="stap_module_details_heading">Module details</string>
     <string name="stap_module_details_name">Name:</string>
     <string name="stap_module_details_status">Status:</string>
+    <string name="pref_autostart_title">Autostart SystemTap</string>
+    <string name="pref_autostart_text">Automatically start SystemTap service on boot</string>
+    <string name="pref_restore_title">Restore modules</string>
+    <string name="pref_restore_text">Restore modules corresponding to their status on startup</string>
+    <string name="pref_port_title">Default port</string>
+    <string name="pref_wakelock_title">Hold wakelock</string>
+    <string name="pref_wakelock_text">Hold a wakelock while running at least one module</string>
+    <string name="title_activity_settings">Settings</string>
 </resources>

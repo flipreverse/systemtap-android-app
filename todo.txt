@@ -2,5 +2,3 @@
 - Add daemon listening on a port (only for wifi) to transmit modules over network
 - Create an own style for android devices with platform version greater 4.X
 - onPrepareDialog(): stap service is sometimes NULL
-- Create settings dialog:
-	--> hold wakelock while running at least one stap module
