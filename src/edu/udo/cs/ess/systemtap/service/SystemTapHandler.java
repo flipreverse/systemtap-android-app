@@ -56,8 +56,7 @@ public class SystemTapHandler extends Handler
 		mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"SystemTap WakeLock");
 		mTimer = new Timer("SystemTapTimer",true);
 		// Start the WIFI/connection listener, which will bring up the control daemon.
-		mControlDaemonStarter = new ControlDaemonStarter();
-		pSystemTapService.registerReceiver(mControlDaemonStarter,mControlDaemonStarter.getFilter());
+		mControlDaemonStarter = new ControlDaemonStarter(mSystemTapService);
 		mSystemtTapTimerTask = null;
 		mNoRunning = 0;
 	}
@@ -88,7 +87,7 @@ public class SystemTapHandler extends Handler
 			case RELOAD_PREFERENCES:
 				Eventlog.d(TAG,"Reloading preferences...");
 				Eventlog.d(TAG,"Restarting ControlDaemon");
-				mControlDaemonStarter.reloadSettings(mSystemTapService);
+				mControlDaemonStarter.reloadSettings();
 				Eventlog.d(TAG,"Resetting wake lock");
 				synchronized (mTimer) {
 					if (mNoRunning > 0) {
@@ -128,8 +127,8 @@ public class SystemTapHandler extends Handler
 		}
 	}
 	
-	public void stop() {
-	    mSystemTapService.unregisterReceiver(mControlDaemonStarter);
+	public void onDestory() {
+		mControlDaemonStarter.stop();
 	}
 	
 	public void decrementRunningModules() {

@@ -115,7 +115,7 @@ public class SystemTapService extends Service
 
 		mModuleManagement.save();
 	    this.stopAllModules();
-	    mSystemTapHandler.stop();
+	    mSystemTapHandler.onDestory();
 	    
 		super.onDestroy();
 	}
