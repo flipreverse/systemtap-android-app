@@ -30,18 +30,17 @@ import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 import edu.udo.cs.ess.systemtap.R;
 import edu.udo.cs.ess.systemtap.SystemTapActivity;
-import edu.udo.cs.ess.systemtap.net.ControlDaemonStarter;
 import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class SystemTapService extends Service
 {
 	public static final String TAG = SystemTapService.class.getSimpleName();
 	private static final int NOTIFICATION_ID = 0x4711;
+	public static final String RELOAD_PREFERENCES = "reloadpreferences";
 	
 	private SystemTapHandler mSystemTapHandler;
 	private SystemTapBinder mSystemTapBinder;
 	private ModuleManagement mModuleManagement;
-	private ControlDaemonStarter mServerDaemonStarter;
 	private boolean mInitFailed;
 	private boolean mInit;
 	
@@ -55,23 +54,15 @@ public class SystemTapService extends Service
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId)
 	{
-		if (intent == null) {
+		if (intent == null || intent.getAction() == null) {
 			return START_STICKY;
 		}
 
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        if (settings.getBoolean(this.getString(R.string.pref_restore_modules), false)) {
-        	this.restoreModules();
-        } else {
-			Eventlog.d(TAG,"No restore wanted, reset running modules to stopped.");
-        	// No restore, set all running modules to stopped
-    		for (Module module : mModuleManagement.getModules()) {
-    			if (module.getStatus() == ModuleStatus.RUNNING) {
-    				Eventlog.e(TAG,module.getName());
-    				mModuleManagement.updateModuleStatus(module.getName(),ModuleStatus.STOPPED);
-    			}
-    		}
-        }
+		Message msg = mSystemTapHandler.obtainMessage();
+		if (intent.getAction().equalsIgnoreCase(SystemTapService.RELOAD_PREFERENCES)) {
+			msg.what = SystemTapHandler.RELOAD_PREFERENCES;			
+		}
+		mSystemTapHandler.sendMessage(msg);
 
 	    return START_STICKY;
 	}
@@ -124,7 +115,7 @@ public class SystemTapService extends Service
 
 		mModuleManagement.save();
 	    this.stopAllModules();
-	    this.unregisterReceiver(mServerDaemonStarter);
+	    mSystemTapHandler.stop();
 	    
 		super.onDestroy();
 	}
@@ -378,9 +369,6 @@ public class SystemTapService extends Service
 		mModuleManagement.load();
 		mSystemTapHandler = new SystemTapHandler(thread.getLooper(),this,mModuleManagement);
 		mSystemTapBinder = new SystemTapBinder(this);
-		// Start the WIFI/connection listener, which will bring up the control daemon.
-		mServerDaemonStarter = new ControlDaemonStarter();
-		this.registerReceiver(mServerDaemonStarter,mServerDaemonStarter.getFilter());
 		mInit = true;
 		
 		Eventlog.d(TAG,"Make sure that no stap process is already running at service startup");
@@ -395,6 +383,20 @@ public class SystemTapService extends Service
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, target_intent, 0);
         notification.setLatestEventInfo(this, this.getText(R.string.stap_service_running),this.getText(R.string.stap_service_detail_info), contentIntent);
         this.startForeground(SystemTapService.NOTIFICATION_ID, notification);
+        
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        if (settings.getBoolean(this.getString(R.string.pref_restore_modules), false)) {
+        	this.restoreModules();
+        } else {
+			Eventlog.d(TAG,"No restore wanted, reset running modules to stopped.");
+        	// No restore, set all running modules to stopped
+    		for (Module module : mModuleManagement.getModules()) {
+    			if (module.getStatus() == ModuleStatus.RUNNING) {
+    				Eventlog.e(TAG,module.getName());
+    				mModuleManagement.updateModuleStatus(module.getName(),ModuleStatus.STOPPED);
+    			}
+    		}
+        }
 	}
 	
 	private void stopAllModules()

@@ -40,12 +40,12 @@ public class ModuleManagement extends Observable
 		mModules = new ConcurrentHashMap<String, Module>();
 	}
 	
-	public synchronized Collection<Module> getModules()
+	public synchronized LinkedList<Module> getModules()
 	{
-		return mModules.values();
+		return new LinkedList<Module>(mModules.values());
 	}
 
-	public synchronized Collection<Module> getRunningModules() {
+	public synchronized LinkedList<Module> getRunningModules() {
 		LinkedList<Module> ret = new LinkedList<Module>();
 	
 		for (Module module : this.getModules()) {

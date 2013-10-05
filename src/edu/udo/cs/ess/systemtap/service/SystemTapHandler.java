@@ -23,6 +23,7 @@ import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 import edu.udo.cs.ess.systemtap.R;
 import edu.udo.cs.ess.systemtap.net.ControlDaemon;
+import edu.udo.cs.ess.systemtap.net.ControlDaemonStarter;
 import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 
@@ -34,11 +35,13 @@ public class SystemTapHandler extends Handler
 	public static final int START_MODULE = 0x0;
 	public static final int STOP_MODULE = 0x2;
 	public static final int DELETE_MODULE = 0x4;
+	public static final int RELOAD_PREFERENCES = 0x8;
 	
 	public static final String MODULENAME_ID = "modulename";
 
 	private ModuleManagement mModuleManagement;
 	private SystemTapService mSystemTapService;
+	private ControlDaemonStarter mControlDaemonStarter;
 	private Timer mTimer;
 	private SystemTapTimerTask mSystemtTapTimerTask;
 	private WakeLock mWakeLock;
@@ -52,6 +55,9 @@ public class SystemTapHandler extends Handler
 		PowerManager powerManager = (PowerManager)mSystemTapService.getSystemService(Context.POWER_SERVICE);
 		mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"SystemTap WakeLock");
 		mTimer = new Timer("SystemTapTimer",true);
+		// Start the WIFI/connection listener, which will bring up the control daemon.
+		mControlDaemonStarter = new ControlDaemonStarter();
+		pSystemTapService.registerReceiver(mControlDaemonStarter,mControlDaemonStarter.getFilter());
 		mSystemtTapTimerTask = null;
 		mNoRunning = 0;
 	}
@@ -60,159 +66,70 @@ public class SystemTapHandler extends Handler
 	public void handleMessage(Message pMsg)
 	{
 		String modulename = null;
-		LinkedList<String> list = null;
-		File moduleFile = null;
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
+
 		switch (pMsg.what)
 		{
-		case START_MODULE:
-			int noRunningModules = -1;
-			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
-			try {
-				// Parse the number of parallel running modules from preferences
-				noRunningModules = Integer.valueOf(settings.getString(mSystemTapService.getString(R.string.pref_running_modules), mSystemTapService.getString(R.string.default_running_modules)));
-			} catch (NumberFormatException e) {
-				Eventlog.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
+			case START_MODULE:
+				modulename = pMsg.getData().getString(MODULENAME_ID);
+				this.startModule(modulename);
 				break;
-			}
-
-			if (mModuleManagement.getRunningModules().size() >= noRunningModules) {
-				Eventlog.e(TAG,"Reached maximum number of parallel running modules.");
-				Toast.makeText(mSystemTapService,mSystemTapService.getString(R.string.stap_service_start_fail_maxmodules), Toast.LENGTH_SHORT).show();
-				break;
-			}
-
-			modulename = pMsg.getData().getString(MODULENAME_ID);
-			moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + modulename + Config.MODULE_EXT);
-			if (moduleFile.exists())
-			{
-				Module module = mModuleManagement.getModule(modulename);
-				if (module == null)
-				{
-					module = mModuleManagement.createModule(modulename);
-				}
-				DateFormat format = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss");
-				Date date = new Date();
-				String outputFilename = modulename + "_" + format.format(date);
-				list = new LinkedList<String>();
-				list.add("modulename=" + modulename);
-				list.add("moduledir=" + Config.MODULES_ABSOLUTE_PATH);
-				list.add("outputname=" + outputFilename);
-				list.add("outputdir=" + Config.STAP_OUTPUT_ABSOLUTE_PATH);
-				list.add("logdir=" + Config.STAP_LOG_ABSOLUTE_PATH);
-				list.add("rundir=" + Config.STAP_RUN_ABSOLUTE_PATH);
-				list.add("stapdir=" + mSystemTapService.getFilesDir().getParent());
-				list.add(":q!");
 				
-				if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.STAP_SCRIPT_NAME,list) != 0)
-				{
-					Eventlog.e(TAG,"Could not start stap");
-					Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_failed) + ":" + modulename, Toast.LENGTH_SHORT).show();
-					mModuleManagement.updateModuleStatus(module.getName(), ModuleStatus.CRASHED);
-				}
-				else
-				{
-					try
-					{
-						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
-						Thread.sleep(900);
+			case STOP_MODULE:
+				modulename = pMsg.getData().getString(MODULENAME_ID);
+				this.stopModule(modulename);
+				break;
+	
+			case DELETE_MODULE:
+				modulename = pMsg.getData().getString(MODULENAME_ID);
+				this.deleteModule(modulename);
+				break;
+	
+			case RELOAD_PREFERENCES:
+				Eventlog.d(TAG,"Reloading preferences...");
+				Eventlog.d(TAG,"Restarting ControlDaemon");
+				mControlDaemonStarter.reloadSettings(mSystemTapService);
+				Eventlog.d(TAG,"Resetting wake lock");
+				synchronized (mTimer) {
+					if (mNoRunning > 0) {
+						if (settings.getBoolean(mSystemTapService.getString(R.string.pref_wakelock), false)) {
+							if (!mWakeLock.isHeld()) {
+								Eventlog.d(TAG,"User wants a wake lock. Acquiring wake lock.");
+								mWakeLock.acquire();
+							}
+						} else {
+							if (mWakeLock.isHeld()) {
+								Eventlog.d(TAG,"User doesn't want a wake lock. Releasing wake lock.");
+								mWakeLock.release();
+							}
+						}
 					}
-					catch (InterruptedException e)
-					{
-						/* We don't care :-) */
-					}
-					ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), ModuleStatus.RUNNING);
-					mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
-					if (moduleStatus == ModuleStatus.RUNNING) {
-						this.incrementRunningModules();
-					}
 				}
-			}
-			else
-			{
-				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + modulename, Toast.LENGTH_SHORT).show();
-				Eventlog.e(TAG, "START_MODULE: No such module " + modulename);
-			}
-			break;
-			
-		case STOP_MODULE:
-			modulename = pMsg.getData().getString(MODULENAME_ID);
-			File pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + modulename + Config.PID_EXT);
-			if (pidFile.exists())
-			{
-				int pid = -1;
-				try
-				{
-					DataInputStream in = new DataInputStream(new FileInputStream(pidFile));
-					pid = Integer.valueOf(in.readLine());
-					in.close();
-				}
-				catch (IOException e)
-				{
-					Eventlog.printStackTrace(TAG, e);
+				Eventlog.d(TAG,"Check if number of parallel running modules still match preference");
+				LinkedList<Module> modules = mModuleManagement.getRunningModules();
+				int noRunningModules = -1;
+				if ((noRunningModules = this.getPrefRunningModules()) == -1) {
 					break;
 				}
-				list = new LinkedList<String>();
-				list.add("pid=" + pid);
-				list.add("busyboxdir=" + mSystemTapService.getFilesDir().getParent());
-				list.add(":q!");
-				if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME,list) != 0)
-				{
-					Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail) + ":" + modulename, Toast.LENGTH_SHORT).show();
-					Eventlog.e(TAG, "Could not run kill script (" + modulename + ")");
-				}
-				else
-				{
-					try
-					{
-						/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
-						Thread.sleep(700);
-					}
-					catch (InterruptedException e)
-					{
-						/* We don't care :-) */
-					}
-					ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, modulename, ModuleStatus.STOPPED);
-					mModuleManagement.updateModuleStatus(modulename, moduleStatus);
-					if (moduleStatus == ModuleStatus.STOPPED) {
-						this.decrementRunningModules();
+				/*
+				 * This is a quite ugly strategy to determine which modules should be killed!! :-/
+				 * Maybe this should be commented out.
+				 */
+				if (modules.size() > noRunningModules) {
+					int noToKill = modules.size() - noRunningModules;
+					Eventlog.d(TAG,"User reduced number of parallel running modules by " + noToKill + ". Killing the first " + noToKill + " running modules.");
+					for (int i = 0; i < noToKill; i++) {
+						Module module = modules.get(i);
+						this.stopModule(module.getName());
+						Eventlog.d(TAG,"Killed module \"" + module.getName() + "\"");
 					}
 				}
-			}
-			else
-			{
-				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail_nomdoule), Toast.LENGTH_SHORT).show();
-				Eventlog.e(TAG, "Could not stop module - selected module (" + modulename + ") is not running");
-			}
-			break;
-
-		case DELETE_MODULE:
-			modulename = pMsg.getData().getString(MODULENAME_ID);
-			moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + modulename + Config.MODULE_EXT);
-			if (moduleFile.exists())
-			{
-				Module module = mModuleManagement.getModule(modulename);
-				if (module == null)
-				{
-					Eventlog.e(TAG,"Asked for a module deletion, but no such module: " + modulename);
-					break;
-				}
-				if (module.getStatus() != ModuleStatus.RUNNING) {
-					if (!moduleFile.delete()) {
-						Eventlog.e(TAG,"Can't delete module file: " + moduleFile.getAbsolutePath());
-					} else {
-						Eventlog.d(TAG,"Deleted module file: " + moduleFile.getAbsolutePath());
-					}
-				} else {
-					Eventlog.e(TAG,"Can't delete module file. It is currently running!");
-				}
-			}
-			else
-			{
-				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + modulename, Toast.LENGTH_SHORT).show();
-				Eventlog.e(TAG, "START_MODULE: No such module " + modulename);
-			}
-			break;
+				break;
 		}
+	}
+	
+	public void stop() {
+	    mSystemTapService.unregisterReceiver(mControlDaemonStarter);
 	}
 	
 	public void decrementRunningModules() {
@@ -238,12 +155,148 @@ public class SystemTapHandler extends Handler
 					mSystemtTapTimerTask = new SystemTapTimerTask(mModuleManagement,mSystemTapService,this);
 					mTimer.schedule(mSystemtTapTimerTask, 10 * 1000, Config.TIMER_TASK_PERIOD);
 					SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
-		            if (settings.getBoolean(mSystemTapService.getString(R.string.pref_wakelock), false)){
+		            if (settings.getBoolean(mSystemTapService.getString(R.string.pref_wakelock), false)) {
 		            	Eventlog.d(TAG,"Acquire wake lock");
 		            	mWakeLock.acquire();
 		            }
 			}
 			mNoRunning++;
 		}
+	}
+	
+	private void deleteModule(String pModulename) {
+		File moduleFile = null;
+
+		moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + pModulename + Config.MODULE_EXT);
+		if (moduleFile.exists()) {
+			Module module = mModuleManagement.getModule(pModulename);
+			if (module == null) {
+				Eventlog.e(TAG,"Asked for a module deletion, but no such module: " + pModulename);
+				return;
+			}
+			if (module.getStatus() != ModuleStatus.RUNNING) {
+				if (!moduleFile.delete()) {
+					Eventlog.e(TAG,"Can't delete module file: " + moduleFile.getAbsolutePath());
+				} else {
+					Eventlog.d(TAG,"Deleted module file: " + moduleFile.getAbsolutePath());
+				}
+			} else {
+				Eventlog.e(TAG,"Can't delete module file. It is currently running!");
+			}
+		} else {
+			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + pModulename, Toast.LENGTH_SHORT).show();
+			Eventlog.e(TAG, "START_MODULE: No such module " + pModulename);
+		}
+	}
+	
+	private void startModule(String pModulename) {
+		LinkedList<String> list = null;
+		File moduleFile = null;
+
+		int noRunningModules = -1;
+		if ((noRunningModules = this.getPrefRunningModules()) == -1)  {
+			return;
+		}
+
+		if (mModuleManagement.getRunningModules().size() >= noRunningModules) {
+			Eventlog.e(TAG,"Reached maximum number of parallel running modules.");
+			Toast.makeText(mSystemTapService,mSystemTapService.getString(R.string.stap_service_start_fail_maxmodules), Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + pModulename + Config.MODULE_EXT);
+		if (moduleFile.exists()) {
+			Module module = mModuleManagement.getModule(pModulename);
+			if (module == null) {
+				module = mModuleManagement.createModule(pModulename);
+			}
+			DateFormat format = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss");
+			Date date = new Date();
+			String outputFilename = pModulename + "_" + format.format(date);
+			list = new LinkedList<String>();
+			list.add("modulename=" + pModulename);
+			list.add("moduledir=" + Config.MODULES_ABSOLUTE_PATH);
+			list.add("outputname=" + outputFilename);
+			list.add("outputdir=" + Config.STAP_OUTPUT_ABSOLUTE_PATH);
+			list.add("logdir=" + Config.STAP_LOG_ABSOLUTE_PATH);
+			list.add("rundir=" + Config.STAP_RUN_ABSOLUTE_PATH);
+			list.add("stapdir=" + mSystemTapService.getFilesDir().getParent());
+			list.add(":q!");
+			
+			if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.STAP_SCRIPT_NAME,list) != 0) {
+				Eventlog.e(TAG,"Could not start stap");
+				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_failed) + ":" + pModulename, Toast.LENGTH_SHORT).show();
+				mModuleManagement.updateModuleStatus(module.getName(), ModuleStatus.CRASHED);
+			} else {
+				try {
+					/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
+					Thread.sleep(900);
+				} catch (InterruptedException e) {
+					/* We don't care :-) */
+				}
+				ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), ModuleStatus.RUNNING);
+				mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
+				if (moduleStatus == ModuleStatus.RUNNING) {
+					this.incrementRunningModules();
+				}
+			}
+		} else {
+			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + pModulename, Toast.LENGTH_SHORT).show();
+			Eventlog.e(TAG, "START_MODULE: No such module " + pModulename);
+		}
+	}
+	
+	private void stopModule(String pModulename) {
+		LinkedList<String> list = null;
+
+		File pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + pModulename + Config.PID_EXT);
+		if (pidFile.exists()) {
+			int pid = -1;
+			try {
+				DataInputStream in = new DataInputStream(new FileInputStream(pidFile));
+				pid = Integer.valueOf(in.readLine());
+				in.close();
+			} catch (IOException e) {
+				Eventlog.printStackTrace(TAG, e);
+				return;
+			}
+			list = new LinkedList<String>();
+			list.add("pid=" + pid);
+			list.add("busyboxdir=" + mSystemTapService.getFilesDir().getParent());
+			list.add(":q!");
+			if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME,list) != 0) {
+				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail) + ":" + pModulename, Toast.LENGTH_SHORT).show();
+				Eventlog.e(TAG, "Could not run kill script (" + pModulename + ")");
+			} else {
+				try {
+					/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
+					Thread.sleep(700);
+				} catch (InterruptedException e) {
+					/* We don't care :-) */
+				}
+				ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, pModulename, ModuleStatus.STOPPED);
+				mModuleManagement.updateModuleStatus(pModulename, moduleStatus);
+				if (moduleStatus == ModuleStatus.STOPPED) {
+					this.decrementRunningModules();
+				}
+			}
+		} else {
+			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail_nomdoule), Toast.LENGTH_SHORT).show();
+			Eventlog.e(TAG, "Could not stop module - selected module (" + pModulename + ") is not running");
+		}
+	}
+	
+	private int getPrefRunningModules() {
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
+
+		int noRunningModules = -1;
+		try {
+			// Parse the number of parallel running modules from preferences
+			noRunningModules = Integer.valueOf(settings.getString(mSystemTapService.getString(R.string.pref_running_modules), mSystemTapService.getString(R.string.default_running_modules)));
+		} catch (NumberFormatException e) {
+			Eventlog.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
+			return -1;
+		}
+		return noRunningModules;
 	}
 }

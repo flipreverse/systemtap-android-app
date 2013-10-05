@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import edu.udo.cs.ess.logging.Eventlog;
+import edu.udo.cs.ess.systemtap.service.SystemTapService;
 
 public class SettingsActivity extends PreferenceActivity {
 
@@ -38,8 +39,8 @@ public class SettingsActivity extends PreferenceActivity {
 	@Override
 	protected void onStop() {
 		super.onStop();
-		//Intent intent = new Intent(this,MobiDACService.class);
-		//intent.setAction(MobiDACService.RELOAD_PREFERENCES);
-		//this.startService(intent);
+		Intent intent = new Intent(this,SystemTapService.class);
+		intent.setAction(SystemTapService.RELOAD_PREFERENCES);
+		this.startService(intent);
 	}
 }
