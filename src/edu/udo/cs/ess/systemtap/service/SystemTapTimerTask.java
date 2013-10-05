@@ -4,6 +4,7 @@ import java.util.TimerTask;
 
 import android.content.Context;
 import edu.udo.cs.ess.logging.Eventlog;
+import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class SystemTapTimerTask extends TimerTask
 {
@@ -23,7 +24,7 @@ public class SystemTapTimerTask extends TimerTask
 	@Override
 	public void run()
 	{
-		Module.Status moduleNewStatus;
+		ModuleStatus moduleNewStatus;
 		
 		Eventlog.d(TAG, "Check if modules (" + mModuleManagement.getModules().size() + ") status is still up to date");
 		for(Module module:mModuleManagement.getModules())
@@ -34,9 +35,9 @@ public class SystemTapTimerTask extends TimerTask
 			{
 				Eventlog.d(TAG,"modules (" + module.getName() + ") status has changed. Updating database...");
 				// Since we just get here in case the module status has changed, it is just necessary to check moduleNewStatus.
-				if (moduleNewStatus == Module.Status.STOPPED || moduleNewStatus == Module.Status.CRASHED) {
+				if (moduleNewStatus == ModuleStatus.STOPPED || moduleNewStatus == ModuleStatus.CRASHED) {
 					mSystemTapHandler.decrementRunningModules();
-				} else if (moduleNewStatus == Module.Status.RUNNING) {
+				} else if (moduleNewStatus == ModuleStatus.RUNNING) {
 					mSystemTapHandler.incrementRunningModules();
 				}
 				mModuleManagement.updateModuleStatus(module.getName(), moduleNewStatus);

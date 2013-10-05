@@ -56,4 +56,6 @@ public class Config
 	public static final String MODULE_CONF_FILE_ENTRY_STATUS = "status";
 	
 	public static final int TIMER_TASK_PERIOD = 5 * 60 * 1000;
+	
+	public static final String DAEMON_PORT = "4711";
 }

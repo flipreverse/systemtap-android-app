@@ -18,6 +18,12 @@ Set up the Android project
 	
 4. Use the steps descried in 2. to import the real project
 
+Updating protobuf definition
+----------------------------
+1.  Just run the following command:
+
+	protoc --java_out=src/ SystemTapMessage.proto
+
 Build busybox
 -------------
 1. Make sure you have the recent version of android ndk (current r8)

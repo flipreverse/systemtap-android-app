@@ -17,6 +17,7 @@ import android.content.Context;
 import android.os.Environment;
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
+import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class Util
 {
@@ -257,7 +258,7 @@ public class Util
 	 * @param pStatus the expected status
 	 * @return Returns new module state
 	 */
-	public static Module.Status checkModuleStatus(Context pContext, String pModulename, Module.Status pStatus)
+	public static ModuleStatus checkModuleStatus(Context pContext, String pModulename, ModuleStatus pStatus)
 	{
 		File pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + pModulename + Config.PID_EXT);
 		if (pidFile.exists())
@@ -270,15 +271,15 @@ public class Util
 					{
 						case RUNNING:
 							Eventlog.d(TAG,"module (" + pModulename + ") status is running and pid file exists. all fine. :-)");
-							return Module.Status.RUNNING;
+							return ModuleStatus.RUNNING;
 							
 						case STOPPED:
 							Eventlog.e(TAG,"module (" + pModulename + ") status is stopped, but stap is running. Updating status...");
-							return Module.Status.RUNNING;
+							return ModuleStatus.RUNNING;
 							
 						case CRASHED:
 							Eventlog.e(TAG,"module (" + pModulename + ") status is crasehd, but stap is running. Updating status...");
-							return Module.Status.RUNNING;
+							return ModuleStatus.RUNNING;
 					}
 				}
 				else
@@ -288,15 +289,15 @@ public class Util
 						case RUNNING:
 							Eventlog.e(TAG,"module (" + pModulename + ") status is running, but stap is not running. Updating status....");
 							Eventlog.e(TAG,"module (" + pModulename + ") status is crashed. Removing pid file: " + pidFile.delete());
-							return Module.Status.CRASHED;
+							return ModuleStatus.CRASHED;
 							
 						case STOPPED:
 							Eventlog.d(TAG,"module (" + pModulename + ") status is stopped, but pidfile exsits. Deleting it: " + pidFile.delete());
-							return Module.Status.STOPPED;
+							return ModuleStatus.STOPPED;
 							
 						case CRASHED:
 							Eventlog.d(TAG,"module (" + pModulename + ") status is crashed, but pidfile exsits. Deleting it: " + pidFile.delete());
-							return Module.Status.CRASHED;
+							return ModuleStatus.CRASHED;
 					}
 				}
 			}
@@ -304,7 +305,7 @@ public class Util
 			{
 				Eventlog.e(TAG,"Error reading pid file of module " + pModulename + ". Try again later.");
 				Eventlog.printStackTrace(TAG, e);
-				return Module.Status.CRASHED;
+				return ModuleStatus.CRASHED;
 			}
 		}
 		else
@@ -313,19 +314,19 @@ public class Util
 			{
 				case RUNNING:
 					Eventlog.e(TAG,"module (" + pModulename + ") status is running, but stap (no pid file) is not running. Updating status.... ");
-					return Module.Status.CRASHED;
+					return ModuleStatus.CRASHED;
 					
 				case STOPPED:
 					Eventlog.d(TAG,"module (" + pModulename + ") status is stopped and no pid file exists. all fine. :-)");
-					return Module.Status.STOPPED;
+					return ModuleStatus.STOPPED;
 					
 				case CRASHED:
 					Eventlog.d(TAG,"module (" + pModulename + ") status is crashed and no pid file exists. all fine. :-)");
-					return Module.Status.CRASHED;
+					return ModuleStatus.CRASHED;
 			}
 		}
 		/* Although i hate this kind of comments: this should never happen */
 		Eventlog.e(TAG,"checkModuleStatus() reached end of function. Module: " + pModulename + ", Status: " + pStatus);
-		return Module.Status.STOPPED;
+		return ModuleStatus.STOPPED;
 	}
 }

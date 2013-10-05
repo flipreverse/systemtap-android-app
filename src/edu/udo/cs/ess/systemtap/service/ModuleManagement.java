@@ -1,6 +1,8 @@
 package edu.udo.cs.ess.systemtap.service;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
@@ -16,6 +18,9 @@ import com.google.gson.stream.JsonWriter;
 
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
+import edu.udo.cs.ess.systemtap.net.protocol.Ack;
+import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.MessageType;
+import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class ModuleManagement extends Observable
 {
@@ -66,7 +71,7 @@ public class ModuleManagement extends Observable
 		return module;
 	}
 	
-	public synchronized void updateModuleStatus(String pName, Module.Status pStatus)
+	public synchronized void updateModuleStatus(String pName, ModuleStatus pStatus)
 	{
 		Module module = mModules.get(pName);
 		if (module != null)
@@ -105,7 +110,7 @@ public class ModuleManagement extends Observable
 	public synchronized void updateModules(){
 		this.updateModules(false);
 	}
-
+	
 	private synchronized void updateModules(boolean pLoadConf) 
 	{
 		boolean changed = false;
@@ -149,12 +154,12 @@ public class ModuleManagement extends Observable
 						String entryName = reader.nextName(), statusText = "";
 						if (entryName.equalsIgnoreCase(Config.MODULE_CONF_FILE_ENTRY_STATUS)) {
 							statusText = reader.nextString();
-							if (statusText.equalsIgnoreCase(Module.Status.STOPPED.name())) {
-								module.setStatus(Module.Status.STOPPED);
-							} else if (statusText.equalsIgnoreCase(Module.Status.RUNNING.name())) {
-								module.setStatus(Module.Status.RUNNING);
-							} else if (statusText.equalsIgnoreCase(Module.Status.CRASHED.name())) {
-								module.setStatus(Module.Status.CRASHED);
+							if (statusText.equalsIgnoreCase(ModuleStatus.STOPPED.name())) {
+								module.setStatus(ModuleStatus.STOPPED);
+							} else if (statusText.equalsIgnoreCase(ModuleStatus.RUNNING.name())) {
+								module.setStatus(ModuleStatus.RUNNING);
+							} else if (statusText.equalsIgnoreCase(ModuleStatus.CRASHED.name())) {
+								module.setStatus(ModuleStatus.CRASHED);
 							}
 						}
 					}
@@ -173,7 +178,7 @@ public class ModuleManagement extends Observable
 			Eventlog.d(TAG, "Does module " + module.getName() + " exist in module directory?");
 			if (!moduleFile.exists())
 			{
-				if (module.getStatus() == Module.Status.RUNNING)
+				if (module.getStatus() == ModuleStatus.RUNNING)
 				{
 					Eventlog.d(TAG, "No, it does not exist, but it will not be deleted because it is currently running.");
 				}

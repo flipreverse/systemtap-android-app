@@ -1,13 +1,14 @@
 package edu.udo.cs.ess.systemtap.service;
 
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Observer;
-import java.util.Timer;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -29,6 +30,8 @@ import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 import edu.udo.cs.ess.systemtap.R;
 import edu.udo.cs.ess.systemtap.SystemTapActivity;
+import edu.udo.cs.ess.systemtap.net.ControlDaemonStarter;
+import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class SystemTapService extends Service
 {
@@ -38,6 +41,7 @@ public class SystemTapService extends Service
 	private SystemTapHandler mSystemTapHandler;
 	private SystemTapBinder mSystemTapBinder;
 	private ModuleManagement mModuleManagement;
+	private ControlDaemonStarter mServerDaemonStarter;
 	private boolean mInitFailed;
 	private boolean mInit;
 	
@@ -62,9 +66,9 @@ public class SystemTapService extends Service
 			Eventlog.d(TAG,"No restore wanted, reset running modules to stopped.");
         	// No restore, set all running modules to stopped
     		for (Module module : mModuleManagement.getModules()) {
-    			if (module.getStatus() == Module.Status.RUNNING) {
+    			if (module.getStatus() == ModuleStatus.RUNNING) {
     				Eventlog.e(TAG,module.getName());
-    				mModuleManagement.updateModuleStatus(module.getName(),Module.Status.STOPPED);
+    				mModuleManagement.updateModuleStatus(module.getName(),ModuleStatus.STOPPED);
     			}
     		}
         }
@@ -120,6 +124,7 @@ public class SystemTapService extends Service
 
 		mModuleManagement.save();
 	    this.stopAllModules();
+	    this.unregisterReceiver(mServerDaemonStarter);
 	    
 		super.onDestroy();
 	}
@@ -128,6 +133,28 @@ public class SystemTapService extends Service
 	public IBinder onBind(Intent arg0) { return mSystemTapBinder; }
 	
 	/* BEGIN - PUBLIC INTERFACE */
+	public boolean addModule(String pName, byte[] pData) {
+		File moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + pName + Config.MODULE_EXT);
+		if (moduleFile.exists()) {
+			Eventlog.e(TAG,"addModule(): Module " + pName + " already present. Doing nothing.");
+			return true;
+		}
+		/**
+		 * The module management keeps track of the module directory for added or deleted files. It analyzes them, if it is a systemtap module.
+		 * If not present in database, it will be added. Hence, to add a new module it's just necessary to copy it to the directory.
+		 * The observer will do the rest. 
+		 */
+		try {
+			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(moduleFile));
+			out.write(pData);
+			out.close();
+		} catch(IOException e) {
+			Eventlog.e(TAG,"addModule(): Can't save module content to file (" + moduleFile.getAbsolutePath() + "): " + e.getMessage());
+			return false;
+		}
+		return true;
+	}
+
 	public void startModule(String pModulename)
 	{
 		if (!mInit || mInitFailed)
@@ -154,6 +181,27 @@ public class SystemTapService extends Service
 		
 		Message msg = mSystemTapHandler.obtainMessage();
 		msg.what = SystemTapHandler.STOP_MODULE;
+		Bundle data = new Bundle();
+		data.putString(SystemTapHandler.MODULENAME_ID, pModulename);
+		msg.setData(data);
+		mSystemTapHandler.sendMessage(msg);
+	}
+
+	public void deleteModule(String pModulename)
+	{
+		if (!mInit || mInitFailed)
+		{
+			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			return;
+		}
+		/**
+		 * Forward the instruction to the service handler, which will call the module management to delete the module.
+		 * Someone may argue that it is sufficient to delete the file from its directory. But further checks are required, e.g. is this module running.
+		 * Moreover upcoming features may require additional checks or operations.
+		 * Hence, it is necessary to implement module deletion in this asymmetrical way in comparison to adding a module.
+		 */
+		Message msg = mSystemTapHandler.obtainMessage();
+		msg.what = SystemTapHandler.DELETE_MODULE;
 		Bundle data = new Bundle();
 		data.putString(SystemTapHandler.MODULENAME_ID, pModulename);
 		msg.setData(data);
@@ -330,6 +378,9 @@ public class SystemTapService extends Service
 		mModuleManagement.load();
 		mSystemTapHandler = new SystemTapHandler(thread.getLooper(),this,mModuleManagement);
 		mSystemTapBinder = new SystemTapBinder(this);
+		// Start the WIFI/connection listener, which will bring up the control daemon.
+		mServerDaemonStarter = new ControlDaemonStarter();
+		this.registerReceiver(mServerDaemonStarter,mServerDaemonStarter.getFilter());
 		mInit = true;
 		
 		Eventlog.d(TAG,"Make sure that no stap process is already running at service startup");
@@ -351,7 +402,7 @@ public class SystemTapService extends Service
 		Eventlog.d(TAG, "Stopping all modules...");
 		for(Module module:mModuleManagement.getModules())
 		{
-			if (module.getStatus() == Module.Status.RUNNING)
+			if (module.getStatus() == ModuleStatus.RUNNING)
 			{
 				Eventlog.d(TAG, "Stopping module: " + module.getName());
 				this.stopModule(module.getName());
@@ -362,7 +413,7 @@ public class SystemTapService extends Service
 	private void restoreModules() {
 		Eventlog.d(TAG,"Restoring modules...");
 		for (Module module : mModuleManagement.getModules()) {
-			if (module.getStatus() == Module.Status.RUNNING) {
+			if (module.getStatus() == ModuleStatus.RUNNING) {
 				Eventlog.d(TAG,"Module " + module.getName() + " was running on last shutdown. Restarting...");
 				this.startModule(module.getName());
 			} else {

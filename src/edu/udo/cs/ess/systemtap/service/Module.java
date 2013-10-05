@@ -1,24 +1,21 @@
 package edu.udo.cs.ess.systemtap.service;
 
+import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
+
 public class Module
-{
-	public enum Status
-	{
-		STOPPED, RUNNING, CRASHED;
-	};
-	
+{	
 	private String mName;
-	private Status mStatus;
+	private ModuleStatus mStatus;
 	
 	public Module(String pName)
 	{
 		mName = pName;
-		mStatus = Status.STOPPED;
+		mStatus = ModuleStatus.STOPPED;
 	}
 	
 	public String getName() { return mName; }
 	
-	public void setStatus(Status pStatus) { mStatus = pStatus; }
+	public void setStatus(ModuleStatus pStatus) { mStatus = pStatus; }
 	
-	public Status getStatus() { return mStatus; }
+	public ModuleStatus getStatus() { return mStatus; }
 }

@@ -22,6 +22,7 @@ import android.widget.Toast;
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 import edu.udo.cs.ess.systemtap.R;
+import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 
 
@@ -31,6 +32,7 @@ public class SystemTapHandler extends Handler
 	
 	public static final int START_MODULE = 0x0;
 	public static final int STOP_MODULE = 0x2;
+	public static final int DELETE_MODULE = 0x4;
 	
 	public static final String MODULENAME_ID = "modulename";
 
@@ -58,11 +60,12 @@ public class SystemTapHandler extends Handler
 	{
 		String modulename = null;
 		LinkedList<String> list = null;
+		File moduleFile = null;
 		switch (pMsg.what)
 		{
 		case START_MODULE:
 			modulename = pMsg.getData().getString(MODULENAME_ID);
-			File moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + modulename + Config.MODULE_EXT);
+			moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + modulename + Config.MODULE_EXT);
 			if (moduleFile.exists())
 			{
 				Module module = mModuleManagement.getModule(modulename);
@@ -87,7 +90,7 @@ public class SystemTapHandler extends Handler
 				{
 					Eventlog.e(TAG,"Could not start stap");
 					Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_failed) + ":" + modulename, Toast.LENGTH_SHORT).show();
-					mModuleManagement.updateModuleStatus(module.getName(), Module.Status.CRASHED);
+					mModuleManagement.updateModuleStatus(module.getName(), ModuleStatus.CRASHED);
 				}
 				else
 				{
@@ -100,9 +103,9 @@ public class SystemTapHandler extends Handler
 					{
 						/* We don't care :-) */
 					}
-					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), Module.Status.RUNNING);
+					ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), ModuleStatus.RUNNING);
 					mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
-					if (moduleStatus == Module.Status.RUNNING) {
+					if (moduleStatus == ModuleStatus.RUNNING) {
 						this.incrementRunningModules();
 					}
 				}
@@ -151,9 +154,9 @@ public class SystemTapHandler extends Handler
 					{
 						/* We don't care :-) */
 					}
-					Module.Status moduleStatus = Util.checkModuleStatus(mSystemTapService, modulename, Module.Status.STOPPED);
+					ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, modulename, ModuleStatus.STOPPED);
 					mModuleManagement.updateModuleStatus(modulename, moduleStatus);
-					if (moduleStatus == Module.Status.STOPPED) {
+					if (moduleStatus == ModuleStatus.STOPPED) {
 						this.decrementRunningModules();
 					}
 				}
@@ -162,6 +165,34 @@ public class SystemTapHandler extends Handler
 			{
 				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail_nomdoule), Toast.LENGTH_SHORT).show();
 				Eventlog.e(TAG, "Could not stop module - selected module (" + modulename + ") is not running");
+			}
+			break;
+
+		case DELETE_MODULE:
+			modulename = pMsg.getData().getString(MODULENAME_ID);
+			moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + modulename + Config.MODULE_EXT);
+			if (moduleFile.exists())
+			{
+				Module module = mModuleManagement.getModule(modulename);
+				if (module == null)
+				{
+					Eventlog.e(TAG,"Asked for a module deletion, but no such module: " + modulename);
+					break;
+				}
+				if (module.getStatus() != ModuleStatus.RUNNING) {
+					if (!moduleFile.delete()) {
+						Eventlog.e(TAG,"Can't delete module file: " + moduleFile.getAbsolutePath());
+					} else {
+						Eventlog.d(TAG,"Deleted module file: " + moduleFile.getAbsolutePath());
+					}
+				} else {
+					Eventlog.e(TAG,"Can't delete module file. It is currently running!");
+				}
+			}
+			else
+			{
+				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + modulename, Toast.LENGTH_SHORT).show();
+				Eventlog.e(TAG, "START_MODULE: No such module " + modulename);
 			}
 			break;
 		}
