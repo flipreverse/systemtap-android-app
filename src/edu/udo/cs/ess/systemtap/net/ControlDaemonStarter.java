@@ -46,7 +46,7 @@ public class ControlDaemonStarter extends BroadcastReceiver {
 				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(pContext);
 				try {
 					// Parse the port from preferences
-					int port = Integer.valueOf(settings.getString(pContext.getString(R.string.pref_daemon_port), Config.DAEMON_PORT));
+					int port = Integer.valueOf(settings.getString(pContext.getString(R.string.pref_daemon_port), pContext.getString(R.string.default_daemon_port)));
 					// Init and start control daemon
 					mControlDaemon = new ControlDaemon(port,stapService);
 					mControlDaemon.start();

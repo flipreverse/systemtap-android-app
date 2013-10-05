@@ -7,5 +7,6 @@
 	<string name="pref_daemon_port">transmitDaemonPort</string>
 	<string name="pref_restore_modules">restoreModulesBoot</string>
 	<string name="pref_running_modules">runningModules</string>
+	<string name="default_daemon_port">4711</string>
 	<string name="default_running_modules">3</string>
 </resources>
