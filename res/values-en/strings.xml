@@ -17,6 +17,7 @@
     <string name="stap_service_start_success">Started stap script</string>
     <string name="stap_service_stop_fail_nomdoule">No such module to stop</string>
     <string name="stap_service_start_fail_nomodule">No such module to start</string>
+    <string name="stap_service_start_fail_maxmodules">Reached maximum number of parallel running modules</string>
     <string name="stap_module_running">running</string>
     <string name="stap_module_crashed">crashed</string>
     <string name="stap_module_stopped">stopped</string>
@@ -36,5 +37,7 @@
     <string name="pref_port_title">Default port</string>
     <string name="pref_wakelock_title">Hold wakelock</string>
     <string name="pref_wakelock_text">Hold a wakelock while running at least one module</string>
+    <string name="pref_running_modules_title">Running modules</string>
+    <string name="pref_running_modules_text">Specify the number of parallel running modules</string>
     <string name="title_activity_settings">Settings</string>
 </resources>

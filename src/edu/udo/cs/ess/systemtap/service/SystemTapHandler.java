@@ -51,7 +51,7 @@ public class SystemTapHandler extends Handler
 		PowerManager powerManager = (PowerManager)mSystemTapService.getSystemService(Context.POWER_SERVICE);
 		mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"SystemTap WakeLock");
 		mTimer = new Timer("SystemTapTimer",true);
-		mSystemtTapTimerTask = new SystemTapTimerTask(mModuleManagement,mSystemTapService,this);
+		mSystemtTapTimerTask = null;
 		mNoRunning = 0;
 	}
 	
@@ -64,6 +64,22 @@ public class SystemTapHandler extends Handler
 		switch (pMsg.what)
 		{
 		case START_MODULE:
+			int noRunningModules = -1;
+			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
+			try {
+				// Parse the number of parallel running modules from preferences
+				noRunningModules = Integer.valueOf(settings.getString(mSystemTapService.getString(R.string.pref_running_modules), mSystemTapService.getString(R.string.default_running_modules)));
+			} catch (NumberFormatException e) {
+				Eventlog.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
+				break;
+			}
+
+			if (mModuleManagement.getRunningModules().size() >= noRunningModules) {
+				Eventlog.e(TAG,"Reached maximum number of parallel running modules.");
+				Toast.makeText(mSystemTapService,mSystemTapService.getString(R.string.stap_service_start_fail_maxmodules), Toast.LENGTH_SHORT).show();
+				break;
+			}
+
 			modulename = pMsg.getData().getString(MODULENAME_ID);
 			moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + modulename + Config.MODULE_EXT);
 			if (moduleFile.exists())

@@ -1,13 +1,12 @@
 package edu.udo.cs.ess.systemtap.service;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Observable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,8 +17,6 @@ import com.google.gson.stream.JsonWriter;
 
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
-import edu.udo.cs.ess.systemtap.net.protocol.Ack;
-import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.MessageType;
 import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class ModuleManagement extends Observable
@@ -47,7 +44,18 @@ public class ModuleManagement extends Observable
 	{
 		return mModules.values();
 	}
+
+	public synchronized Collection<Module> getRunningModules() {
+		LinkedList<Module> ret = new LinkedList<Module>();
 	
+		for (Module module : this.getModules()) {
+			if (module.getStatus() == ModuleStatus.RUNNING) {
+				ret.add(module);
+			}
+		}
+		return ret;
+	}
+
 	public synchronized Module getModule(String pName)
 	{
 		return mModules.get(pName);
