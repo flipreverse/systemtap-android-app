@@ -39,12 +39,22 @@ public class ControlDaemon implements Runnable {
 		} catch (InterruptedException e) {
 			Eventlog.e(TAG,"stop(): Can't wait for server thread: " + e + " -- " + e.getMessage());
 		}
-		
-		for (ClientConnection conn : mConnections) {
+
+		LinkedList<ClientConnection> connections = null;
+		synchronized(mConnections) {
+			connections = new LinkedList<ClientConnection>(mConnections);
+		}
+		for (ClientConnection conn : connections) {
 			conn.stop();
 		}
 	}
 	
+	public void onClientDisconnected(ClientConnection pClientConnection) {
+		synchronized(mConnections) {
+			mConnections.remove(pClientConnection);
+		}
+	}
+
 	public void run() {
 		ClientConnection clientConnection = null;
 		Socket clientSocket = null;
@@ -55,7 +65,7 @@ public class ControlDaemon implements Runnable {
 			try {
 				clientSocket = mServerSocket.accept();
 				// Delegate all send/receive and protocol staff to a dedicated thread
-				clientConnection = new ClientConnection(clientSocket,mSystemTapService);
+				clientConnection = new ClientConnection(clientSocket,mSystemTapService,this);
 				// Remember all active connections
 				mConnections.add(clientConnection);
 				// Start receiving and protocol handling

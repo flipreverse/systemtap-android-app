@@ -28,15 +28,17 @@ public class ClientConnection implements Runnable {
 
 	private static final String TAG = ClientConnection.class.getSimpleName();
 	private Socket mSocket;
-	private Thread mClientThread;
+	private Thread mClientThread;;
+	private ControlDaemon mControlDaemon;
 	private boolean mRunning;
 	private SystemTapService mSystemTapService;
 	
-	public ClientConnection(Socket pSocket, SystemTapService pSystemTapService) {
+	public ClientConnection(Socket pSocket, SystemTapService pSystemTapService, ControlDaemon pControlDaemon) {
 		mSocket = pSocket;
 		mClientThread = new Thread(this);
 		mRunning = false;
 		mSystemTapService = pSystemTapService;
+		mControlDaemon = pControlDaemon;
 	}
 	
 	public SocketAddress getRemoteAddress() {
@@ -57,7 +59,6 @@ public class ClientConnection implements Runnable {
 			 * In addition, mRunning is already false. The while loop in run() will terminate.
 			 */
 			mSocket.close();
-			mSocket = null;
 			mClientThread.join();
 		} catch (IOException e) {
 			Eventlog.e(TAG,"stop(): Can't close socket: " + e + " -- " + e.getMessage());
@@ -113,6 +114,7 @@ public class ClientConnection implements Runnable {
 			Eventlog.e(TAG,"run(): Can't close socket: " + e + " -- " + e.getMessage());
 		}
 		mSocket = null;
+		mControlDaemon.onClientDisconnected(this);
 	}
 	
 	private boolean sendMessage(AbstractMessage pAMsg) {
