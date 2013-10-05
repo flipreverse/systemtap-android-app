@@ -379,8 +379,10 @@ public class SystemTapService extends Service
 		Util.runCmdAsRoot(this.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME, list);
 		
 		Notification notification = new Notification(R.drawable.ic_launcher, this.getText(R.string.stap_service_started),System.currentTimeMillis());
-		Intent target_intent = new Intent(this,SystemTapActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, target_intent, 0);
+		Intent targetIntent = new Intent(this,SystemTapActivity.class);
+		//targetIntent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+		targetIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, targetIntent, 0);
         notification.setLatestEventInfo(this, this.getText(R.string.stap_service_running),this.getText(R.string.stap_service_detail_info), contentIntent);
         this.startForeground(SystemTapService.NOTIFICATION_ID, notification);
         
