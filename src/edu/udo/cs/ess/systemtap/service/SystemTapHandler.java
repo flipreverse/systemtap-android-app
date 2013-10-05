@@ -22,6 +22,7 @@ import android.widget.Toast;
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 import edu.udo.cs.ess.systemtap.R;
+import edu.udo.cs.ess.systemtap.net.ControlDaemon;
 import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
 
@@ -219,7 +220,7 @@ public class SystemTapHandler extends Handler
 			mNoRunning--;
 			if (mNoRunning == 0) {
 					mSystemtTapTimerTask.cancel();
-					mTimer.cancel();
+					mSystemtTapTimerTask = null;
 					mTimer.purge();
 					Eventlog.d(TAG,"Last running module stopped. Canceled timer.");
 		            if (mWakeLock.isHeld()){
@@ -234,6 +235,7 @@ public class SystemTapHandler extends Handler
 		synchronized (mTimer) {
 			if (mNoRunning == 0) {
 					Eventlog.d(TAG,"First module started. Starting timer task.");
+					mSystemtTapTimerTask = new SystemTapTimerTask(mModuleManagement,mSystemTapService,this);
 					mTimer.schedule(mSystemtTapTimerTask, 10 * 1000, Config.TIMER_TASK_PERIOD);
 					SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
 		            if (settings.getBoolean(mSystemTapService.getString(R.string.pref_wakelock), false)){
