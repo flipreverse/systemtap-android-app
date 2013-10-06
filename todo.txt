@@ -1,3 +1,2 @@
-- Create own listview style --> especially choose a different selected color than white
-- Create an own style for android devices with platform version greater 4.X
 - onPrepareDialog(): stap service is sometimes NULL
+- Make app more android version independent
