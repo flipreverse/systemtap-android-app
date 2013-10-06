@@ -1,2 +1,5 @@
+- Redesign {log,output}file dialogue
+- Add button to delete a module to its details dialogue ( + confirmation + offer deletion of log/output files)
+- Add message to send and list log/output files
 - onPrepareDialog(): stap service is sometimes NULL
 - Make app more android version independent
