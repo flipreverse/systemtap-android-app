@@ -36,9 +36,11 @@ import edu.udo.cs.ess.systemtap.service.SystemTapService;
 
 public class SystemTapActivity  extends SherlockFragmentActivity implements ActionBar.TabListener, OnClickListener, Observer 
 {
-	public static final String CONTEXT_TAG = "context";
 	public static final String MODULE_ID = "moduleid";
 	public static final String LOGFILE_OBJECT = "logfileobject";
+	public static final String LOGFILE_TAB_ID = "logtab";
+	public static final String OUTPUTFILE_TAB_ID = "outputtab";
+	public static final String MODULE_TAB_ID = "moduletab";
 	
 	public static final int  MODULE_DETAILS_DIALOG = 0x1;
 	public static final int LOGFILE_DETAILS_DIALOG = 0x2;
@@ -46,8 +48,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	private static final String TAG = SystemTapActivity.class.getSimpleName();
 	
 	private ModulesOverviewFragment mModulesOverviewFragement;
-	private LogFilesOverviewFragment mLogFilesOverviewFragment;
-	private OutputFilesOverviewFragment mOutputFilesOverviewFragment;
+	private FilesOverviewFragment mFilesOverviewFragment;
 	private ReentrantLock mMutex;
     private SystemTapService mSystemTapService;
     
@@ -64,43 +65,41 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	private String mSelectedModule;
 	
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
-        if(android.os.Build.VERSION.SDK_INT < 11)
-        {
+        if(android.os.Build.VERSION.SDK_INT < 11) {
         	this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         }
 		this.setTheme(com.actionbarsherlock.R.style.Theme_Sherlock);
 		this.setContentView(R.layout.activity_systemtap);
 		this.getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-		
+
         mMutex = new ReentrantLock();
+        mModulesOverviewFragement = null;
+        mFilesOverviewFragment = null;
 
 	    /* Add the module overview tab */
         ActionBar.Tab tab = this.getSupportActionBar().newTab();
         tab.setText(this.getText(R.string.stap_module));
         tab.setTabListener(this);
-        mModulesOverviewFragement = (ModulesOverviewFragment) Fragment.instantiate(this, ModulesOverviewFragment.class.getName());
-        tab.setTag(mModulesOverviewFragement);
+        tab.setTag(SystemTapActivity.MODULE_TAB_ID);
         this.getSupportActionBar().addTab(tab);
         
         /* Add the logfile overview tab */
         tab = this.getSupportActionBar().newTab();
         tab.setText(this.getText(R.string.stap_logfiles));
         tab.setTabListener(this);
-        mLogFilesOverviewFragment = (LogFilesOverviewFragment) Fragment.instantiate(this, LogFilesOverviewFragment.class.getName());
-        tab.setTag(mLogFilesOverviewFragment);
+        tab.setTag(SystemTapActivity.LOGFILE_TAB_ID);
         this.getSupportActionBar().addTab(tab);
         
         /* Add the outputfile overview tab */
         tab = this.getSupportActionBar().newTab();
         tab.setText(this.getText(R.string.stap_outputfiles));
         tab.setTabListener(this);
-        mOutputFilesOverviewFragment = (OutputFilesOverviewFragment) Fragment.instantiate(this, OutputFilesOverviewFragment.class.getName());
-        tab.setTag(mOutputFilesOverviewFragment);
+        tab.setTag(SystemTapActivity.OUTPUTFILE_TAB_ID);
         this.getSupportActionBar().addTab(tab);
-        
+
         mSelectedModule = null;
 	}
 	
@@ -202,8 +201,9 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	public boolean onPrepareOptionsMenu(Menu pMenu)
 	{
         ActionBar actionBar = this.getSupportActionBar();
-        MenuItem item = pMenu.findItem(R.id.menuItemRefresh); 
-        boolean visible = actionBar.getSelectedTab().getTag() == mOutputFilesOverviewFragment || actionBar.getSelectedTab().getTag() == mLogFilesOverviewFragment;
+        MenuItem item = pMenu.findItem(R.id.menuItemRefresh);
+        String tag = (String)actionBar.getSelectedTab().getTag();
+        boolean visible = tag.equalsIgnoreCase(SystemTapActivity.LOGFILE_TAB_ID) || tag.equalsIgnoreCase(SystemTapActivity.OUTPUTFILE_TAB_ID);
         item.setVisible(visible);
         return true;
 	}
@@ -227,17 +227,8 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
             	}
             	return true;
             case R.id.menuItemRefresh:
-                ActionBar actionBar = this.getSupportActionBar();
-            	if (actionBar.getSelectedTab().getTag() == mOutputFilesOverviewFragment)
-            	{
-            		Eventlog.d(TAG, "Refreshing output file list");
-            		mOutputFilesOverviewFragment.refreshFileList();            		
-            	}
-            	else if (actionBar.getSelectedTab().getTag() == mLogFilesOverviewFragment)
-            	{
-            		Eventlog.d(TAG, "Refreshing log file list");
-            		mLogFilesOverviewFragment.refreshFileList();
-            	}
+        		Eventlog.d(TAG, "Refreshing file list");
+        		mFilesOverviewFragment.refreshFileList();
             	return true;
             case R.id.menuItemSettings:
             	intent = new Intent(this, SettingsActivity.class);
@@ -451,27 +442,45 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
     };
 
     @Override
-    public void onTabReselected(Tab tab, FragmentTransaction transaction)
+    public void onTabReselected(Tab pTab, FragmentTransaction pTransaction)
     {
     
     }
 
 	@Override
-	public void onTabSelected(Tab tab, FragmentTransaction transaction)
+	public void onTabSelected(Tab pTab, FragmentTransaction pTransaction)
 	{
-		if (tab == null || transaction == null)
-		{
+		if (pTab == null || pTransaction == null) {
 			Eventlog.e(TAG,"tab null");
 			return;
 		}
-
-		transaction.replace(R.id.frameLayoutContentContainer, (Fragment) tab.getTag());
+		String tag = (String)pTab.getTag();
+		if (tag.equalsIgnoreCase(SystemTapActivity.MODULE_TAB_ID)) {
+			if (mModulesOverviewFragement == null) {
+				mModulesOverviewFragement = (ModulesOverviewFragment) Fragment.instantiate(this, ModulesOverviewFragment.class.getName());
+				pTransaction.add(R.id.frameLayoutContentContainer,mModulesOverviewFragement);
+			} else {
+				pTransaction.attach(mModulesOverviewFragement);
+			}
+		} else if (tag.equalsIgnoreCase(SystemTapActivity.LOGFILE_TAB_ID) || tag.equalsIgnoreCase(SystemTapActivity.OUTPUTFILE_TAB_ID)) {
+			if (mFilesOverviewFragment == null) {
+				mFilesOverviewFragment = (FilesOverviewFragment) Fragment.instantiate(this, FilesOverviewFragment.class.getName());
+				pTransaction.add(R.id.frameLayoutContentContainer,mFilesOverviewFragment);
+			} else {
+				pTransaction.attach(mFilesOverviewFragment);
+			}
+		}
 	}
        
 	@Override
-	public void onTabUnselected(Tab tab, FragmentTransaction transaction)
+	public void onTabUnselected(Tab pTab, FragmentTransaction pTransaction)
 	{
-	               
+		String tag = (String)pTab.getTag();
+		if (tag.equalsIgnoreCase(SystemTapActivity.MODULE_TAB_ID)) {
+			pTransaction.detach(mModulesOverviewFragement);
+		} else if (tag.equalsIgnoreCase(SystemTapActivity.LOGFILE_TAB_ID) || tag.equalsIgnoreCase(SystemTapActivity.OUTPUTFILE_TAB_ID)) {
+			pTransaction.detach(mFilesOverviewFragment);
+		}
 	}
 
 }

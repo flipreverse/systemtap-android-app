@@ -1,13 +1,10 @@
 package edu.udo.cs.ess.systemtap;
 import java.io.File;
-import java.util.ArrayList;
 
-import android.app.Activity;
 import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 /**
@@ -16,80 +13,20 @@ import android.widget.TextView;
  * @author alex
  *
  */
-public class FileListAdapter extends BaseAdapter
+public class FileListAdapter extends ArrayAdapter<File>
 {
 	private static final String TAG = FileListAdapter.class.getSimpleName();
 	
-	private ArrayList<File> mData;
-	private Activity mActivity;
-	private LayoutInflater mLayoutInflater;
-	
-	public FileListAdapter(Activity pContext)
-	{
-		mData = new ArrayList<File>();
-		mActivity = pContext;
-		mLayoutInflater = (LayoutInflater) mActivity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-	}
-
-	@Override
-	public boolean isEmpty()
-	{
-		return mData.isEmpty();
+	public FileListAdapter(Context pContext,int pResource) {
+		super(pContext,pResource);
 	}
 	
 	@Override
-	public boolean isEnabled(int pPosition)
-	{
-		if (pPosition < mData.size())
-		{
-			return true;
-		}
-		else
-		{
-			throw new ArrayIndexOutOfBoundsException();
-		}
-	}
-
-	@Override
-	public int getCount()
-	{
-		return mData.size();
-	}
-
-	@Override
-	public Object getItem(int pPosition)
-	{
-		if (pPosition >= mData.size())
-		{
-			return null;
-		}
-		else
-		{
-			return mData.get(pPosition);
-		}
-	}
-
-	@Override
-	public long getItemId(int pPosition)
-	{
-		return pPosition;
-	}
-	
-	@Override
-	public View getView(int pPosition, View pConvertView, ViewGroup pParent)
-	{
-		View itemView;
-		if (pConvertView == null)
-		{
-			 itemView = mLayoutInflater.inflate(R.layout.file_list_item, pParent, false);
-		}
-		else
-		{
-			itemView = pConvertView;
-		}
+	public View getView(int pPosition, View pConvertView, ViewGroup pParent) {
+		View itemView = super.getView(pPosition,pConvertView,pParent);
 		
 		TextView textViewLogFileListName = (TextView)itemView.findViewById(R.id.textViewFileListName);		
-		File file = mData.get(pPosition);
+		File file = this.getItem(pPosition);
 		/* Get file name */
 		String fileName = file.getName();
 		/* Strip off the extension */
@@ -103,19 +40,5 @@ public class FileListAdapter extends BaseAdapter
 		textViewLogFileListName.setText(date + " " + time);
 		
 		return itemView;
-	}
-
-	public void setData(File pData[])
-	{
-		/* Avoid raceconditions accessing mData */
-		synchronized (mData)
-		{
-			mData.clear();
-			for (File cur: pData)
-			{
-				mData.add(cur);
-			}
-			this.notifyDataSetChanged();
-		}
 	}
 }

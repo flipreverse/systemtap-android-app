@@ -1,5 +1,9 @@
 package edu.udo.cs.ess.systemtap;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.concurrent.locks.ReentrantLock;
 
 import android.content.ComponentName;
@@ -17,10 +21,11 @@ import android.widget.ListView;
 import com.actionbarsherlock.app.SherlockFragment;
 
 import edu.udo.cs.ess.logging.Eventlog;
+import edu.udo.cs.ess.systemtap.service.Module;
 import edu.udo.cs.ess.systemtap.service.SystemTapBinder;
 import edu.udo.cs.ess.systemtap.service.SystemTapService;
 
-public class ModulesOverviewFragment extends SherlockFragment implements OnItemClickListener
+public class ModulesOverviewFragment extends SherlockFragment implements OnItemClickListener, Observer
 {
 	private static final String TAG = ModulesOverviewFragment.class.getSimpleName();
 		
@@ -43,8 +48,8 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
 		super.onCreate(savedInstanceState);
 
         mMutex = new ReentrantLock();
-		this.getActivity().setTheme(com.actionbarsherlock.R.style.Theme_Sherlock_Light_DarkActionBar);
-        mModuleListAdapter = new ModuleListAdapter(this.getActivity());
+		this.getActivity().setTheme(com.actionbarsherlock.R.style.Theme_Sherlock);
+        mModuleListAdapter = new ModuleListAdapter(this.getSherlockActivity().getSupportActionBar().getThemedContext(),R.layout.module_list_item,R.id.textViewModuleName);
         mListViewModules = (ListView)this.getActivity().findViewById(R.id.listViewModules);
 		mListViewModules.setEmptyView(this.getActivity().findViewById(android.R.id.empty));
 		mListViewModules.setAdapter(mModuleListAdapter);
@@ -84,7 +89,7 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
     	mMutex.lock();
     	if (mSystemTapService != null)
     	{
-        	mSystemTapService.unregisterObserver(mModuleListAdapter);
+        	mSystemTapService.unregisterObserver(this);
     		Eventlog.d(TAG,"SystemTapService unbounded");
     		mSystemTapService = null;
     	}
@@ -103,7 +108,7 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
 	{
 		if (pParent.getId() == mListViewID)
 		{
-			String moduleName = (String)mModuleListAdapter.getItem(pPosition);
+			String moduleName = mModuleListAdapter.getItem(pPosition).getName();
 			Bundle args = new Bundle();
 			/* Pass the selected module as a parameter to the dialog */
 			args.putString(SystemTapActivity.MODULE_ID, moduleName);
@@ -121,9 +126,9 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
         {
         	mSystemTapService = ((SystemTapBinder)service).getService();
         	/* Init the ModuleListAdapter */
-        	ModulesOverviewFragment.this.mModuleListAdapter.setData(mSystemTapService.getModules());
+        	ModulesOverviewFragment.this.refreshModuleList(mSystemTapService.getModules());
         	/* the ModuleListAdapter wants to get notified if the set of modules has changed */
-        	mSystemTapService.registerObserver(ModulesOverviewFragment.this.mModuleListAdapter);
+        	mSystemTapService.registerObserver(ModulesOverviewFragment.this);
         	ModulesOverviewFragment.this.mMutex.unlock();
     		Eventlog.d(TAG,"SystemTapService bounded");
         }
@@ -133,4 +138,31 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
         	mSystemTapService = null;
         }
     };
+
+	@Override
+	public void update(Observable pObservable, Object pData) {
+		/* Some sanity checks to ensure pData is a Collection */
+		if (pData instanceof Collection<?>) {
+			this.refreshModuleList((Collection<Module>)pData);
+		}
+	}
+	
+	private void refreshModuleList(Collection<Module> pModules) {
+		final Collection<Module> modules = pModules;
+		/* If the adapter gets new data, a call to notifyDataSetChanged() should be done from the ui thread. */
+		/* Only the ui thread is allowed to manipulate the gui */
+		this.getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				mModuleListAdapter.clear();
+				if(android.os.Build.VERSION.SDK_INT < 11) {
+		        	for (Module module : modules) {
+		        		mModuleListAdapter.add(module);
+		        	}
+				} else {
+					mModuleListAdapter.addAll(modules);
+				}
+			}
+		});
+	}
 }

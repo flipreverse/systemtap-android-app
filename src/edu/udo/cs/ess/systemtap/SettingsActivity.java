@@ -3,19 +3,26 @@ package edu.udo.cs.ess.systemtap;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+
+import com.actionbarsherlock.app.SherlockPreferenceActivity;
+
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.service.SystemTapService;
 
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends SherlockPreferenceActivity {
 
 	private static final String TAG = SettingsActivity.class.getSimpleName();
+	
+	@Override
+    protected void onCreate(Bundle savedInstanceState) {
+		this.setTheme(com.actionbarsherlock.R.style.Theme_Sherlock);
+        super.onCreate(savedInstanceState);
+    }
 
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
 		super.onPostCreate(savedInstanceState);
-
 		/* try to load preferences */
 		try {
 			addPreferencesFromResource(R.xml.preferences);

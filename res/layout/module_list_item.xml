@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:gravity="center_vertical"
     android:orientation="vertical"
-    android:paddingBottom="5dp"
+    android:paddingBottom="10dp"
     android:paddingLeft="10dp"
     android:paddingRight="10dp"
     android:paddingTop="5dp" >
@@ -13,7 +13,6 @@
             android:id="@+id/textViewModuleName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Medium Text"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@color/stap_module_list_text" />
 
@@ -21,6 +20,6 @@
             android:id="@+id/textViewModuleStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Small Text"/>
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
 
 </LinearLayout>

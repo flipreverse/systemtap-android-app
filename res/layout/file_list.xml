@@ -3,7 +3,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center_horizontal"
-    android:background="@color/stap_logfile_list_bg"
     android:orientation="vertical" >
 
     <Spinner
@@ -17,11 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:dividerHeight="8dp"
-        android:fadingEdge="vertical"
-        android:fadingEdgeLength="10dp"
-        android:listSelector="@drawable/liststyle"
-        android:longClickable="true" >
+        android:dividerHeight="8dp" >
 
             </ListView>
 	<TextView
@@ -29,7 +24,6 @@
 	           android:layout_width="wrap_content"
 	           android:layout_height="wrap_content"
 	           android:layout_gravity="center|center_horizontal|center_vertical"
-	           android:background="@color/stap_module_list_bg"
 	           android:text="@string/stap_logfile_list_empty"
 	           android:textAppearance="?android:attr/textAppearanceMedium"
 	           android:textColor="@color/stap_module_list_text" />
