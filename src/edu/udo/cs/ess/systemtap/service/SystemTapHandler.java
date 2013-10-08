@@ -50,12 +50,16 @@ public class SystemTapHandler extends Handler
 	private SystemTapTimerTask mSystemtTapTimerTask;
 	private WakeLock mWakeLock;
 	private int mNoRunning;
+	private String mLogPath;
+	private String mOutputPath;
+	private String mRunPath;
+	private String mModulesPath;
 
-	public SystemTapHandler(Looper pLooper,SystemTapService pSystemTapService,ModuleManagement pModuleManagetment)
+	public SystemTapHandler(Looper pLooper,SystemTapService pSystemTapService,ModuleManagement pModuleManagement, String pLogPath, String pOutputPath, String pModulesPath, String pRunPath)
 	{
 		super(pLooper);
 		mSystemTapService = pSystemTapService;
-		mModuleManagement = pModuleManagetment;
+		mModuleManagement = pModuleManagement;
 		PowerManager powerManager = (PowerManager)mSystemTapService.getSystemService(Context.POWER_SERVICE);
 		mWakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,"SystemTap WakeLock");
 		mTimer = new Timer("SystemTapTimer",true);
@@ -63,6 +67,10 @@ public class SystemTapHandler extends Handler
 		mControlDaemonStarter = new ControlDaemonStarter(mSystemTapService);
 		mSystemtTapTimerTask = null;
 		mNoRunning = 0;
+		mLogPath = pLogPath;
+		mOutputPath = pOutputPath;
+		mModulesPath = pModulesPath;
+		mRunPath = pRunPath;
 	}
 	
 	@Override
@@ -143,9 +151,9 @@ public class SystemTapHandler extends Handler
 					}
 				} else {
 					if (pMsg.what == DELETE_OUTPUT_FILE) {
-						files = new File[]{ new File(Config.STAP_OUTPUT_ABSOLUTE_PATH + File.separator + filename) };
+						files = new File[]{ new File(mOutputPath + File.separator + filename) };
 					} else {
-						files = new File[]{ new File(Config.STAP_LOG_ABSOLUTE_PATH + File.separator + filename) };
+						files = new File[]{ new File(mLogPath + File.separator + filename) };
 					}
 				}
 				this.deleteFiles(files);
@@ -193,11 +201,11 @@ public class SystemTapHandler extends Handler
 	}
 	
 	public File[] getOutputFiles(final String pModuleName) {
-		return this.getFiles(pModuleName, Config.STAP_OUTPUT_ABSOLUTE_PATH);
+		return this.getFiles(pModuleName, mOutputPath);
 	}
 	
 	public File[] getLogFiles(final String pModuleName) {
-		return this.getFiles(pModuleName, Config.STAP_LOG_ABSOLUTE_PATH);
+		return this.getFiles(pModuleName, mLogPath);
 	}
 	
 	private File[] getFiles(final String pModuleName, String pPath) {
@@ -225,7 +233,7 @@ public class SystemTapHandler extends Handler
 	private void deleteModule(String pModulename) {
 		File moduleFile = null;
 
-		moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + pModulename + Config.MODULE_EXT);
+		moduleFile = new File(mModulesPath + File.separator + pModulename + Config.MODULE_EXT);
 		if (moduleFile.exists()) {
 			Module module = mModuleManagement.getModule(pModulename);
 			if (module == null) {
@@ -262,7 +270,7 @@ public class SystemTapHandler extends Handler
 			return;
 		}
 
-		moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + pModulename + Config.MODULE_EXT);
+		moduleFile = new File(mModulesPath + File.separator + pModulename + Config.MODULE_EXT);
 		if (moduleFile.exists()) {
 			Module module = mModuleManagement.getModule(pModulename);
 			if (module == null) {
@@ -273,11 +281,11 @@ public class SystemTapHandler extends Handler
 			String outputFilename = pModulename + "_" + format.format(date);
 			list = new LinkedList<String>();
 			list.add("modulename=" + pModulename);
-			list.add("moduledir=" + Config.MODULES_ABSOLUTE_PATH);
+			list.add("moduledir=" + mModulesPath);
 			list.add("outputname=" + outputFilename);
-			list.add("outputdir=" + Config.STAP_OUTPUT_ABSOLUTE_PATH);
-			list.add("logdir=" + Config.STAP_LOG_ABSOLUTE_PATH);
-			list.add("rundir=" + Config.STAP_RUN_ABSOLUTE_PATH);
+			list.add("outputdir=" + mOutputPath);
+			list.add("logdir=" + mLogPath);
+			list.add("rundir=" + mRunPath);
 			list.add("stapdir=" + mSystemTapService.getFilesDir().getParent());
 			list.add(":q!");
 			
@@ -307,7 +315,7 @@ public class SystemTapHandler extends Handler
 	private void stopModule(String pModulename) {
 		LinkedList<String> list = null;
 
-		File pidFile = new File(Config.STAP_RUN_ABSOLUTE_PATH + File.separator + pModulename + Config.PID_EXT);
+		File pidFile = new File(mRunPath + File.separator + pModulename + Config.PID_EXT);
 		if (pidFile.exists()) {
 			int pid = -1;
 			try {

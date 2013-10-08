@@ -391,7 +391,7 @@ public class SystemTapService extends Service
 		
 		mModuleManagement = new ModuleManagement();
 		mModuleManagement.load();
-		mSystemTapHandler = new SystemTapHandler(thread.getLooper(),this,mModuleManagement);
+		mSystemTapHandler = new SystemTapHandler(thread.getLooper(),this,mModuleManagement,Config.STAP_LOG_ABSOLUTE_PATH,Config.STAP_OUTPUT_ABSOLUTE_PATH,Config.MODULES_ABSOLUTE_PATH,Config.STAP_RUN_ABSOLUTE_PATH);
 		mSystemTapBinder = new SystemTapBinder(this);
 		mInit = true;
 		
