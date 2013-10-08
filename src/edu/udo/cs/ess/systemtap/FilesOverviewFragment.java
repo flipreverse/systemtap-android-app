@@ -16,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -28,7 +29,7 @@ import edu.udo.cs.ess.systemtap.service.Module;
 import edu.udo.cs.ess.systemtap.service.SystemTapBinder;
 import edu.udo.cs.ess.systemtap.service.SystemTapService;
 
-public class FilesOverviewFragment extends SherlockFragment implements OnItemClickListener, OnItemSelectedListener, Observer
+public class FilesOverviewFragment extends SherlockFragment implements OnItemClickListener, OnItemSelectedListener, Observer, OnItemLongClickListener
 {
 	private static final String TAG = FilesOverviewFragment.class.getSimpleName();
 	
@@ -62,6 +63,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 		mListViewModules.setEmptyView(this.getActivity().findViewById(android.R.id.empty));
 		mListViewModules.setAdapter(mLogFileListAdapter);
 		mListViewModules.setOnItemClickListener(this);
+		mListViewModules.setOnItemLongClickListener(this);
 		mListViewID = mListViewModules.getId();
 		
 		mModuleSpinnerAdapter = new ArrayAdapter<String>(this.getSherlockActivity().getSupportActionBar().getThemedContext(),com.actionbarsherlock.R.layout.sherlock_spinner_item);
@@ -132,7 +134,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 			args.putSerializable(SystemTapActivity.LOGFILE_OBJECT, file);
 			String name = (String)mSpinnerModules.getSelectedItem();
 			args.putString(SystemTapActivity.MODULE_ID, name);
-			this.getActivity().showDialog(SystemTapActivity.LOGFILE_DETAILS_DIALOG, args);
+			this.getActivity().showDialog(SystemTapActivity.FILE_DETAILS_DIALOG, args);
 		}
 		else
 		{
@@ -151,6 +153,22 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 		{
 			Eventlog.e(TAG,"onClick(): unknown source");
 		}	
+	}
+
+	@Override
+	public boolean onItemLongClick(AdapterView<?> pParent, View pView, int pPosition, long pID) {
+		File file = (File)mLogFileListAdapter.getItem(pPosition);
+		Bundle args = new Bundle();
+
+    	args.putBoolean(SystemTapActivity.DELETE_ALL_ID, false);
+    	args.putBoolean(SystemTapActivity.DISMISS_FILE_DETAILS_ID, false);
+    	args.putString(SystemTapActivity.FILE_ID, file.getName());
+		if (mCurrentTag.equalsIgnoreCase(SystemTapActivity.LOGFILE_TAB_ID)) {
+        	this.getActivity().showDialog(SystemTapActivity.DELETE_LOG_FILE_DIALOGUE, args);
+		} else if (mCurrentTag.equalsIgnoreCase(SystemTapActivity.OUTPUTFILE_TAB_ID)) {
+        	this.getActivity().showDialog(SystemTapActivity.DELETE_OUTPUT_FILE_DIALOGUE, args);
+		}
+		return true;
 	}
 
 	public void refreshFileList()
@@ -210,6 +228,10 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 				}
 			});
 		}
+	}
+	
+	public String getSelectedModule() {
+		return (String)mSpinnerModules.getSelectedItem();
 	}
 	
     private ServiceConnection mConnection = new ServiceConnection()

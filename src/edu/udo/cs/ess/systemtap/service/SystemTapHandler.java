@@ -2,6 +2,7 @@ package edu.udo.cs.ess.systemtap.service;
 
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -12,6 +13,7 @@ import java.util.Timer;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -22,7 +24,6 @@ import android.widget.Toast;
 import edu.udo.cs.ess.logging.Eventlog;
 import edu.udo.cs.ess.systemtap.Config;
 import edu.udo.cs.ess.systemtap.R;
-import edu.udo.cs.ess.systemtap.net.ControlDaemon;
 import edu.udo.cs.ess.systemtap.net.ControlDaemonStarter;
 import edu.udo.cs.ess.systemtap.net.protocol.SystemTapMessage.ModuleStatus;
 
@@ -36,8 +37,11 @@ public class SystemTapHandler extends Handler
 	public static final int STOP_MODULE = 0x2;
 	public static final int DELETE_MODULE = 0x4;
 	public static final int RELOAD_PREFERENCES = 0x8;
+	public static final int DELETE_LOG_FILE = 0x10;
+	public static final int DELETE_OUTPUT_FILE = 0x20;
 	
 	public static final String MODULENAME_ID = "modulename";
+	public static final String FILENAME_ID = "filename";
 
 	private ModuleManagement mModuleManagement;
 	private SystemTapService mSystemTapService;
@@ -124,6 +128,31 @@ public class SystemTapHandler extends Handler
 					}
 				}
 				break;
+
+			case DELETE_OUTPUT_FILE:
+			case DELETE_LOG_FILE:
+				Bundle data = pMsg.getData();
+				String filename = data.getString(SystemTapHandler.FILENAME_ID), moduleName = data.getString(SystemTapHandler.MODULENAME_ID);
+				File files[] = null;
+
+				if (filename == null) {
+					if (pMsg.what == DELETE_OUTPUT_FILE) {
+						files = this.getOutputFiles(moduleName);
+					} else {
+						files = this.getLogFiles(moduleName);
+					}
+				} else {
+					if (pMsg.what == DELETE_OUTPUT_FILE) {
+						files = new File[]{ new File(Config.STAP_OUTPUT_ABSOLUTE_PATH + File.separator + filename) };
+					} else {
+						files = new File[]{ new File(Config.STAP_LOG_ABSOLUTE_PATH + File.separator + filename) };
+					}
+				}
+				this.deleteFiles(files);
+				break;
+
+			default:
+				Eventlog.d(TAG,"handleMessage(): what=" + pMsg.what);
 		}
 	}
 	
@@ -160,6 +189,36 @@ public class SystemTapHandler extends Handler
 		            }
 			}
 			mNoRunning++;
+		}
+	}
+	
+	public File[] getOutputFiles(final String pModuleName) {
+		return this.getFiles(pModuleName, Config.STAP_OUTPUT_ABSOLUTE_PATH);
+	}
+	
+	public File[] getLogFiles(final String pModuleName) {
+		return this.getFiles(pModuleName, Config.STAP_LOG_ABSOLUTE_PATH);
+	}
+	
+	private File[] getFiles(final String pModuleName, String pPath) {
+		File outputDir = new File(pPath);
+		File outputFiles[] = outputDir.listFiles(new FileFilter() {
+			
+			@Override
+			public boolean accept(File pathname) {
+				if (pathname.isFile()) {
+					return pathname.getName().startsWith(pModuleName);
+				}
+				return false;
+			}
+		});
+		return outputFiles;
+	}
+	
+	private void deleteFiles(File pFiles[]) {
+		for (File curFile : pFiles) {
+			boolean ret = curFile.delete();
+			Eventlog.d(TAG,"Deleting " + curFile.getAbsolutePath() + " .... Result: " + ret);
 		}
 	}
 	

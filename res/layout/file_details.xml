@@ -13,12 +13,84 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:layout_marginTop="5dp"
-        android:text="Medium Text"
+        android:text="@string/stap_file_details_heading"
         android:textAppearance="?android:attr/textAppearanceLarge" />
+<TableLayout
+        android:id="@+id/tableLayoutFileContents"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:layout_marginTop="10dp" >
 
+        <TableRow
+            android:id="@+id/tableRowFileContentsName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/textViewFileContentsName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:text="@string/stap_file_contents_name"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/textViewFileContentsNameValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_weight="12"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </TableRow>
+        <TableRow
+            android:id="@+id/tableRowFileContentsDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/textViewFileContentsDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:text="@string/stap_file_contents_date"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/textViewFileContentsDateValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="12"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </TableRow>
+        <TableRow
+            android:id="@+id/tableRowFileContentsTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/textViewFileContentsTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:text="@string/stap_file_contents_time"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/textViewFileContentsTimeValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="12"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        </TableRow>
+
+    </TableLayout>
     <HorizontalScrollView
         android:id="@+id/horizontalScrollView1"
-        android:layout_width="240dp"
+        android:layout_width="280dp"
             android:layout_height="300dp"
             android:layout_margin="10dp" >
 
@@ -31,7 +103,6 @@
                 android:id="@+id/textViewFileDetailsContent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Medium Text"
                 android:textAppearance="?android:attr/textAppearanceSmall" />
         </ScrollView>
 
@@ -39,9 +110,7 @@
   <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:background="@android:color/darker_gray"
-        android:padding="10dp" >
+        android:layout_marginTop="15dp" >
 
         <Button
             android:id="@+id/buttonFileDetailsOk"
@@ -49,6 +118,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="10"
             android:text="@string/stap_button_ok" />
+
+        <Button
+            android:id="@+id/buttonFileDetailsDelete"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="10"
+            android:text="@string/stap_button_delete_file" />
 
     </LinearLayout>  
 </LinearLayout>

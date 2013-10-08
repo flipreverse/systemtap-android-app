@@ -41,7 +41,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="left"
                 android:layout_weight="12"
-                android:text="Medium Text"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
         </TableRow>
@@ -63,16 +62,36 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="12"
-                android:text="Medium Text"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
         </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRowModuleDetailsAction"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/textViewModuleDetailsAction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="4"
+                android:text="@string/stap_module_details_action"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <Spinner
+                android:id="@+id/spinnerModuleDetailsActionValue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="12" />
+
+        </TableRow>
+
     </TableLayout>
             <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
-        android:background="@android:color/darker_gray"
         android:padding="10dp" >
 
         <Button
@@ -80,14 +99,14 @@
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:layout_weight="10"
-            android:text="@string/stap_button_ok" />
+            android:text="@string/stap_button_ok"/>
 
         <Button
             android:id="@+id/buttonModuleDetailsCtl"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:layout_weight="10"
-            android:text="@string/stap_button_start" />
+            android:text="@string/stap_button_action" />
 
     </LinearLayout>  
 

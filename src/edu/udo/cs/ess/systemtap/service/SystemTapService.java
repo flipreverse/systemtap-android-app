@@ -252,23 +252,47 @@ public class SystemTapService extends Service
 		{
 			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return null;
-		}
-		
-		File outputDir = new File(Config.STAP_OUTPUT_ABSOLUTE_PATH);
-		File outputFiles[] = outputDir.listFiles(new FileFilter()
-		{
-			
-			@Override
-			public boolean accept(File pathname)
-			{
-				if (pathname.isFile())
-				{
-					return pathname.getName().startsWith(pModulename);
-				}
-				return false;
-			}
-		});	
-		return outputFiles;
+		}	
+		return mSystemTapHandler.getOutputFiles(pModulename);
+	}
+	
+	public void deleteAllLogFiles(String pModulename) {
+		Message msg = mSystemTapHandler.obtainMessage();
+		msg.what = SystemTapHandler.DELETE_LOG_FILE;
+		Bundle data = new Bundle();
+		data.putString(SystemTapHandler.MODULENAME_ID, pModulename);
+		msg.setData(data);
+		mSystemTapHandler.sendMessage(msg);
+	}
+	
+	public void deleteLogFile(String pModulename, String pFilename) {
+		Message msg = mSystemTapHandler.obtainMessage();
+		msg.what = SystemTapHandler.DELETE_LOG_FILE;
+		Bundle data = new Bundle();
+		data.putString(SystemTapHandler.MODULENAME_ID, pModulename);
+		data.putString(SystemTapHandler.FILENAME_ID, pFilename);
+		msg.setData(data);
+		mSystemTapHandler.sendMessage(msg);
+	}
+	
+	public void deleteAllOutputFiles(String pModulename) {
+		Message msg = mSystemTapHandler.obtainMessage();
+		msg.what = SystemTapHandler.DELETE_OUTPUT_FILE;
+		Bundle data = new Bundle();
+		data.putString(SystemTapHandler.MODULENAME_ID, pModulename);
+		msg.setData(data);
+		mSystemTapHandler.sendMessage(msg);
+	}
+	
+	public void deleteOutputFile(String pModulename, String pFilename) {
+		Eventlog.e(TAG,"delete file="+pFilename+",module="+pModulename);
+		Message msg = mSystemTapHandler.obtainMessage();
+		msg.what = SystemTapHandler.DELETE_OUTPUT_FILE;
+		Bundle data = new Bundle();
+		data.putString(SystemTapHandler.MODULENAME_ID, pModulename);
+		data.putString(SystemTapHandler.FILENAME_ID, pFilename);
+		msg.setData(data);
+		mSystemTapHandler.sendMessage(msg);
 	}
 	
 	public void registerObserver(Observer pObserver)
