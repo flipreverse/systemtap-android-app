@@ -446,6 +446,9 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 		            		String moduleName = args.getString(SystemTapActivity.MODULE_ID);
 		            		if (moduleName == null) {
 		            			moduleName = mFilesOverviewFragment.getSelectedModule();
+		            			if (moduleName == null) {
+		            				return;
+		            			}
 		            		}
 		            		if (args.getBoolean(SystemTapActivity.DELETE_ALL_ID)) {
 		            			SystemTapActivity.this.mSystemTapService.deleteAllLogFiles(moduleName);

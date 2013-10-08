@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore.Files;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -132,7 +133,11 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 			Bundle args = new Bundle();
 			/* Pass the selected file as a parameter to the dialog */
 			args.putSerializable(SystemTapActivity.LOGFILE_OBJECT, file);
-			String name = (String)mSpinnerModules.getSelectedItem();
+			String name = this.getSelectedModule();
+			if (name == null) {
+				Eventlog.d(TAG, "No module available");
+				return;
+			}
 			args.putString(SystemTapActivity.MODULE_ID, name);
 			this.getActivity().showDialog(SystemTapActivity.FILE_DETAILS_DIALOG, args);
 		}
@@ -178,7 +183,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 			Eventlog.e(TAG,"refreshFileList(): mSystemTapService is null");
 			return;
 		}
-		String moduleName = (String)mSpinnerModules.getSelectedItem();
+		String moduleName = this.getSelectedModule();
 		if (moduleName != null)
 		{
 			File files[] = null;
@@ -221,17 +226,29 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 				public void run()
 				{
 					Collection<Module> newData = (Collection<Module>)pData;
-					mModuleSpinnerAdapter.clear();
-		        	for (Module module : newData) {
-		        		mModuleSpinnerAdapter.add(module.getName());
-		        	}
+					FilesOverviewFragment.this.updateModuleList(newData);
 				}
 			});
 		}
 	}
 	
+	private void updateModuleList(Collection<Module> pModules) {
+		mModuleSpinnerAdapter.clear();
+		if (pModules.size() == 0) {
+			mModuleSpinnerAdapter.add(FilesOverviewFragment.this.getActivity().getString(R.string.stap_module_list_empty));
+			return;
+		}
+    	for (Module module : pModules) {
+    		mModuleSpinnerAdapter.add(module.getName());
+    	}
+	}
+	
 	public String getSelectedModule() {
-		return (String)mSpinnerModules.getSelectedItem();
+		String ret = (String)mSpinnerModules.getSelectedItem();
+		if (ret != null && ret.equalsIgnoreCase(this.getActivity().getString(R.string.stap_module_list_empty))) {
+			ret = null;
+		}
+		return ret;
 	}
 	
     private ServiceConnection mConnection = new ServiceConnection()
@@ -240,30 +257,11 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
         {
         	FilesOverviewFragment.this.mSystemTapService = ((SystemTapBinder)service).getService();
         	FilesOverviewFragment.this.mModuleSpinnerAdapter.clear();
-        	for (Module module : mSystemTapService.getModules()) {
-        		FilesOverviewFragment.this.mModuleSpinnerAdapter.add(module.getName());
-        	}
-        	Object item = FilesOverviewFragment.this.mSpinnerModules.getSelectedItem();
-        	if (item != null)
+        	FilesOverviewFragment.this.updateModuleList(mSystemTapService.getModules());
+        	String moduleName = FilesOverviewFragment.this.getSelectedModule();
+        	if (moduleName != null)
         	{
-        		/* Set the ListView to a initial state - if more than 1 module is available, get the selected one and pass the avaible logfiles to the listview-adapter */
-        		String moduleName = (String)item;
-				File files[] = null;
-				if (FilesOverviewFragment.this.mCurrentTag.equalsIgnoreCase(SystemTapActivity.LOGFILE_TAB_ID)) {
-					/* Get all log files for this module and pass them to the underlying adapter */
-					files = FilesOverviewFragment.this.mSystemTapService.getLogFiles(moduleName);
-				} else if (FilesOverviewFragment.this.mCurrentTag.equalsIgnoreCase(SystemTapActivity.OUTPUTFILE_TAB_ID)) {
-					/* Get all output files for this module and pass them to the underlying adapter */
-					files = FilesOverviewFragment.this.mSystemTapService.getOutputFiles(moduleName);
-				}
-				mLogFileListAdapter.clear();
-				if(android.os.Build.VERSION.SDK_INT < 11) {
-					for (File file : files) {
-						mLogFileListAdapter.add(file);
-					}
-				} else {
-					mLogFileListAdapter.addAll(files);
-				}
+        		FilesOverviewFragment.this.refreshFileList();
         	}
         	else
         	{
