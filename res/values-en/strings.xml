@@ -41,7 +41,7 @@
     <string name="stap_module_details_action_delete">delete</string>
     <string name="stap_dialogue_delete_file_heading">File deletion</string>
     <string name="stap_dialogue_delete_module_heading">Module deletion</string>
-    <string name="stap_dialogue_delete_module">Are you dutr to delete this module?</string>
+    <string name="stap_dialogue_delete_module">Are you sure to delete this module?</string>
     <string name="stap_dialogue_delete_all_log_files">Are you sure to delete all log files for the selected module?</string>
     <string name="stap_dialogue_delete_log_file">Are you sure to delete this log file?</string>
     <string name="stap_dialogue_delete_all_output_files">Are you sure to delete all output files for the selected module?</string>
