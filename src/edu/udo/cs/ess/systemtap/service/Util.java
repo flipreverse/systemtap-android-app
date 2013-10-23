@@ -3,11 +3,15 @@ package edu.udo.cs.ess.systemtap.service;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -148,27 +152,43 @@ public class Util
 		try
 		{
 			file = new File(pContext.getFilesDir().getParent() + File.separator + pFilename);
-			if (!file.exists())
+			is = pContext.getApplicationContext().getResources().openRawResource(pRAWID);
+			if (file.exists()) {
+				byte md5Old[], md5New[];
+				try {
+					md5Old = Util.mkMD5Hash(file.getAbsolutePath());
+				} catch(Exception e) {
+					Eventlog.e(TAG,"copyFileFromRAW(): Can't create md5 hash of existing file (id = " + pRAWID + "): " + e + " --- " + e.getMessage());
+					return false;
+				}
+				try {
+					md5New = Util.mkMD5Hash(is);
+					is.close();
+					is = pContext.getApplicationContext().getResources().openRawResource(pRAWID);
+				} catch(Exception e) {
+					Eventlog.e(TAG,"copyFileFromRAW(): Can't create md5 hash of raw file (" + file.getAbsolutePath() + "): " + e + " --- " + e.getMessage());
+					return false;
+				}
+				if (Arrays.equals(md5Old, md5New)) {
+					Eventlog.d(TAG, "copyFileFromRAW(): Existing file (" + file.getAbsolutePath() + ") and raw file are equal. Doing nothing!");
+					return true;
+				} else {
+					Eventlog.d(TAG, "copyFileFromRAW(): Existing file (" + file.getAbsolutePath() + ") and raw file are not equal. Start copying...");
+				}
+			}
+			
+			os = new FileOutputStream(file);
+			while ((count = is.read(buffer)) > 0)
 			{
-				if (!file.createNewFile())
-				{
-					Eventlog.e(TAG, "Could not create file: " + pFilename);
-					return false;
-				}
-				is = pContext.getApplicationContext().getResources().openRawResource(pRAWID);
-				os = new FileOutputStream(file);
-				while ((count = is.read(buffer)) > 0)
-				{
-					os.write(buffer, 0, count);
-				}
-				
-				is.close();
-				os.close();
-				if (!file.setExecutable(true, false))
-				{
-					Eventlog.e(TAG, "Could not make file executeable: " + pFilename);
-					return false;
-				}
+				os.write(buffer, 0, count);
+			}
+			
+			is.close();
+			os.close();
+			if (!file.setExecutable(true, false))
+			{
+				Eventlog.e(TAG, "copyFileFromRAW(): Could not make file executeable: " + pFilename);
+				return false;
 			}
 			return true;
 		}
@@ -328,5 +348,29 @@ public class Util
 		/* Although i hate this kind of comments: this should never happen */
 		Eventlog.e(TAG,"checkModuleStatus() reached end of function. Module: " + pModulename + ", Status: " + pStatus);
 		return ModuleStatus.STOPPED;
+	}
+	
+	public static byte[] mkMD5Hash(String pFilename) throws NoSuchAlgorithmException, IOException {
+		byte ret[];
+		InputStream in = new FileInputStream(pFilename);
+		
+		ret = Util.mkMD5Hash(in);
+		in.close();
+		
+		return ret;
+	}
+	
+	public static byte[] mkMD5Hash(InputStream pIn) throws NoSuchAlgorithmException, IOException {
+		MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+		int bytesRead = 0;
+		byte buffer[] = new byte[512];
+		do {
+			bytesRead = pIn.read(buffer,0,buffer.length);
+			if (bytesRead > 0) {
+				digest.update(buffer, 0, bytesRead);
+			}
+		} while (bytesRead > 0);
+		
+	    return digest.digest();
 	}
 }
