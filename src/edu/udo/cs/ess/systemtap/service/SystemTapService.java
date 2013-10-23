@@ -358,7 +358,7 @@ public class SystemTapService extends Service
 			Log.e(TAG,Config.LOG_ABSOLUTE_PATH);
 		    Toast.makeText(this, this.getText(R.string.stap_service_start_failed), Toast.LENGTH_SHORT).show();
 		}
-		
+
 		/* Second extract all included scripts or binaries to our private data directory */
 		if (!Util.copyFileFromRAW(this, R.raw.stapio, Config.STAP_IO_NAME))
 		{
@@ -366,6 +366,16 @@ public class SystemTapService extends Service
 			return;
 		}
 		if (!Util.copyFileFromRAW(this, R.raw.staprun, Config.STAP_RUN_NAME))
+		{
+			mInitFailed = true;
+			return;
+		}
+		if (!Util.copyFileFromRAW(this, R.raw.stap_merge, Config.STAP_MERGE_NAME))
+		{
+			mInitFailed = true;
+			return;
+		}
+		if (!Util.copyFileFromRAW(this, R.raw.stapsh, Config.STAP_SH_NAME))
 		{
 			mInitFailed = true;
 			return;

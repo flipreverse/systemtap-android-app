@@ -43,6 +43,10 @@ public class Config
 	
 	public static final String STAP_IO_NAME = "stapio";
 
+	public static final String STAP_MERGE_NAME = "stapmerge";
+
+	public static final String STAP_SH_NAME = "stapsh";
+
 	public static final String STAP_SCRIPT_NAME = "start_stap.sh";
 	
 	public static final String KILL_SCRIPT_NAME = "kill.sh";
