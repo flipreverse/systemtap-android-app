@@ -128,8 +128,7 @@ public class SystemTapService extends Service
 	public boolean addModule(String pName, byte[] pData) {
 		File moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + pName + Config.MODULE_EXT);
 		if (moduleFile.exists()) {
-			Eventlog.e(TAG,"addModule(): Module " + pName + " already present. Doing nothing.");
-			return true;
+			Eventlog.i(TAG,"addModule(): Module " + pName + " already present. It will be overwritten by the recently received module.");
 		}
 		/**
 		 * The module management keeps track of the module directory for added or deleted files. It analyzes them, if it is a systemtap module.
