@@ -20,11 +20,11 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.systemtap.android.Config;
 import com.systemtap.android.R;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.ControlDaemonStarter;
 import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
 
@@ -98,26 +98,26 @@ public class SystemTapHandler extends Handler
 				break;
 	
 			case RELOAD_PREFERENCES:
-				Eventlog.d(TAG,"Reloading preferences...");
-				Eventlog.d(TAG,"Restarting ControlDaemon");
+				Log.d(TAG,"Reloading preferences...");
+				Log.d(TAG,"Restarting ControlDaemon");
 				mControlDaemonStarter.reloadSettings();
-				Eventlog.d(TAG,"Resetting wake lock");
+				Log.d(TAG,"Resetting wake lock");
 				synchronized (mTimer) {
 					if (mNoRunning > 0) {
 						if (settings.getBoolean(mSystemTapService.getString(R.string.pref_wakelock), false)) {
 							if (!mWakeLock.isHeld()) {
-								Eventlog.d(TAG,"User wants a wake lock. Acquiring wake lock.");
+								Log.d(TAG,"User wants a wake lock. Acquiring wake lock.");
 								mWakeLock.acquire();
 							}
 						} else {
 							if (mWakeLock.isHeld()) {
-								Eventlog.d(TAG,"User doesn't want a wake lock. Releasing wake lock.");
+								Log.d(TAG,"User doesn't want a wake lock. Releasing wake lock.");
 								mWakeLock.release();
 							}
 						}
 					}
 				}
-				Eventlog.d(TAG,"Check if number of parallel running modules still match preference");
+				Log.d(TAG,"Check if number of parallel running modules still match preference");
 				LinkedList<Module> modules = mModuleManagement.getRunningModules();
 				int noRunningModules = -1;
 				if ((noRunningModules = this.getPrefRunningModules()) == -1) {
@@ -129,11 +129,11 @@ public class SystemTapHandler extends Handler
 				 */
 				if (modules.size() > noRunningModules) {
 					int noToKill = modules.size() - noRunningModules;
-					Eventlog.d(TAG,"User reduced number of parallel running modules by " + noToKill + ". Killing the first " + noToKill + " running modules.");
+					Log.d(TAG,"User reduced number of parallel running modules by " + noToKill + ". Killing the first " + noToKill + " running modules.");
 					for (int i = 0; i < noToKill; i++) {
 						Module module = modules.get(i);
 						this.stopModule(module.getName());
-						Eventlog.d(TAG,"Killed module \"" + module.getName() + "\"");
+						Log.d(TAG,"Killed module \"" + module.getName() + "\"");
 					}
 				}
 				break;
@@ -161,7 +161,7 @@ public class SystemTapHandler extends Handler
 				break;
 
 			default:
-				Eventlog.d(TAG,"handleMessage(): what=" + pMsg.what);
+				Log.d(TAG,"handleMessage(): what=" + pMsg.what);
 		}
 	}
 	
@@ -176,10 +176,10 @@ public class SystemTapHandler extends Handler
 					mSystemtTapTimerTask.cancel();
 					mSystemtTapTimerTask = null;
 					mTimer.purge();
-					Eventlog.d(TAG,"Last running module stopped. Canceled timer.");
+					Log.d(TAG,"Last running module stopped. Canceled timer.");
 		            if (mWakeLock.isHeld()){
 		            	mWakeLock.release();
-		            	Eventlog.d(TAG,"Released wake lock");
+		            	Log.d(TAG,"Released wake lock");
 		            }
 			}
 		}
@@ -188,12 +188,12 @@ public class SystemTapHandler extends Handler
 	public void incrementRunningModules() {
 		synchronized (mTimer) {
 			if (mNoRunning == 0) {
-					Eventlog.d(TAG,"First module started. Starting timer task.");
+					Log.d(TAG,"First module started. Starting timer task.");
 					mSystemtTapTimerTask = new SystemTapTimerTask(mModuleManagement,mSystemTapService,this);
 					mTimer.schedule(mSystemtTapTimerTask, 10 * 1000, Config.TIMER_TASK_PERIOD);
 					SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mSystemTapService);
 		            if (settings.getBoolean(mSystemTapService.getString(R.string.pref_wakelock), false)) {
-		            	Eventlog.d(TAG,"Acquire wake lock");
+		            	Log.d(TAG,"Acquire wake lock");
 		            	mWakeLock.acquire();
 		            }
 			}
@@ -227,7 +227,7 @@ public class SystemTapHandler extends Handler
 	private void deleteFiles(File pFiles[]) {
 		for (File curFile : pFiles) {
 			boolean ret = curFile.delete();
-			Eventlog.d(TAG,"Deleting " + curFile.getAbsolutePath() + " .... Result: " + ret);
+			Log.d(TAG,"Deleting " + curFile.getAbsolutePath() + " .... Result: " + ret);
 		}
 	}
 	
@@ -238,21 +238,21 @@ public class SystemTapHandler extends Handler
 		if (moduleFile.exists()) {
 			Module module = mModuleManagement.getModule(pModulename);
 			if (module == null) {
-				Eventlog.e(TAG,"Asked for a module deletion, but no such module: " + pModulename);
+				Log.e(TAG,"Asked for a module deletion, but no such module: " + pModulename);
 				return;
 			}
 			if (module.getStatus() != ModuleStatus.RUNNING) {
 				if (!moduleFile.delete()) {
-					Eventlog.e(TAG,"Can't delete module file: " + moduleFile.getAbsolutePath());
+					Log.e(TAG,"Can't delete module file: " + moduleFile.getAbsolutePath());
 				} else {
-					Eventlog.d(TAG,"Deleted module file: " + moduleFile.getAbsolutePath());
+					Log.d(TAG,"Deleted module file: " + moduleFile.getAbsolutePath());
 				}
 			} else {
-				Eventlog.e(TAG,"Can't delete module file. It is currently running!");
+				Log.e(TAG,"Can't delete module file. It is currently running!");
 			}
 		} else {
 			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + pModulename, Toast.LENGTH_SHORT).show();
-			Eventlog.e(TAG, "START_MODULE: No such module " + pModulename);
+			Log.e(TAG, "START_MODULE: No such module " + pModulename);
 		}
 	}
 	
@@ -266,7 +266,7 @@ public class SystemTapHandler extends Handler
 		}
 
 		if (mModuleManagement.getRunningModules().size() >= noRunningModules) {
-			Eventlog.e(TAG,"Reached maximum number of parallel running modules.");
+			Log.e(TAG,"Reached maximum number of parallel running modules.");
 			Toast.makeText(mSystemTapService,mSystemTapService.getString(R.string.stap_service_start_fail_maxmodules), Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -291,7 +291,7 @@ public class SystemTapHandler extends Handler
 			list.add(":q!");
 			
 			if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.STAP_SCRIPT_NAME,list) != 0) {
-				Eventlog.e(TAG,"Could not start stap");
+				Log.e(TAG,"Could not start stap");
 				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_failed) + ":" + pModulename, Toast.LENGTH_SHORT).show();
 				mModuleManagement.updateModuleStatus(module.getName(), ModuleStatus.CRASHED);
 			} else {
@@ -309,7 +309,7 @@ public class SystemTapHandler extends Handler
 			}
 		} else {
 			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + pModulename, Toast.LENGTH_SHORT).show();
-			Eventlog.e(TAG, "START_MODULE: No such module " + pModulename);
+			Log.e(TAG, "START_MODULE: No such module " + pModulename);
 		}
 	}
 	
@@ -324,7 +324,7 @@ public class SystemTapHandler extends Handler
 				pid = Integer.valueOf(in.readLine());
 				in.close();
 			} catch (IOException e) {
-				Eventlog.printStackTrace(TAG, e);
+				Log.e(TAG,"Can't read pid file(" + pidFile.getAbsolutePath() + "):" + e.getMessage());
 				return;
 			}
 			list = new LinkedList<String>();
@@ -333,7 +333,7 @@ public class SystemTapHandler extends Handler
 			list.add(":q!");
 			if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME,list) != 0) {
 				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail) + ":" + pModulename, Toast.LENGTH_SHORT).show();
-				Eventlog.e(TAG, "Could not run kill script (" + pModulename + ")");
+				Log.e(TAG, "Could not run kill script (" + pModulename + ")");
 			} else {
 				try {
 					/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
@@ -349,7 +349,7 @@ public class SystemTapHandler extends Handler
 			}
 		} else {
 			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail_nomdoule), Toast.LENGTH_SHORT).show();
-			Eventlog.e(TAG, "Could not stop module - selected module (" + pModulename + ") is not running");
+			Log.e(TAG, "Could not stop module - selected module (" + pModulename + ") is not running");
 		}
 	}
 	
@@ -361,7 +361,7 @@ public class SystemTapHandler extends Handler
 			// Parse the number of parallel running modules from preferences
 			noRunningModules = Integer.valueOf(settings.getString(mSystemTapService.getString(R.string.pref_running_modules), mSystemTapService.getString(R.string.default_running_modules)));
 		} catch (NumberFormatException e) {
-			Eventlog.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
 			return -1;
 		}
 		return noRunningModules;

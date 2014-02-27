@@ -12,7 +12,6 @@ public class Config
 	private static final String STAP_OUTPUT_DIR = "stap_output";	
 	private static final String STAP_LOG_DIR = "stap_log";	
 	private static final String STAP_RUN_DIR = "stap_run";	
-	private static final String LOG_DIR = "log";
 	
 	public static final String MEDIA_PATH = "/sdcard/"/*Environment.getExternalStorageDirectory().getAbsolutePath()*/;
 	public static final String MAIN_PATH = MAIN_DIR;
@@ -29,10 +28,7 @@ public class Config
 	
 	public static final String STAP_RUN_PATH = MAIN_DIR + File.separator + STAP_RUN_DIR;
 	public static final String STAP_RUN_ABSOLUTE_PATH = MEDIA_PATH + File.separator + MAIN_DIR + File.separator + STAP_RUN_DIR;
-	
-	public static final String LOG_PATH = MAIN_DIR + File.separator + LOG_DIR;
-	public static final String LOG_ABSOLUTE_PATH = MEDIA_PATH + File.separator + MAIN_DIR + File.separator + LOG_DIR;
-	
+		
 	public static final String MODULE_EXT = ".ko";
 	
 	public static final String PID_EXT = ".pid";

@@ -3,7 +3,6 @@ package com.systemtap.android.service;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,12 +16,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import com.systemtap.android.Config;
-import com.systemtap.android.logging.Eventlog;
-import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
-
 import android.content.Context;
 import android.os.Environment;
+import android.util.Log;
+
+import com.systemtap.android.Config;
+import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class Util
 {
@@ -47,7 +46,7 @@ public class Util
 		}
 		catch (Exception e)
 		{
-			Eventlog.printStackTrace(TAG, e);
+			Log.e(TAG, "Can't execute cmd \"" + pCmd + "\":" + e.getMessage());
 		}
 		
 		return retval;
@@ -65,7 +64,7 @@ public class Util
 		Process process;
 		int retval = -1;
 		
-		Eventlog.i(TAG, "Try to run \"" + pCmd + "\" as root");
+		Log.i(TAG, "Try to run \"" + pCmd + "\" as root");
 		try
 		{
 			runtime = Runtime.getRuntime();
@@ -87,21 +86,21 @@ public class Util
 			{
 				DataInputStream in = new DataInputStream(process.getErrorStream());
 				String line = null;
-				Eventlog.e(TAG, "Error while running \"" + pCmd + "\" as root:");
+				Log.e(TAG, "Error while running \"" + pCmd + "\" as root:");
 				while ((line = in.readLine()) != null)
 				{
-					Eventlog.e(TAG,line);
+					Log.e(TAG,line);
 				}				
 				in.close();
 			}
 			else
 			{
-				Eventlog.i(TAG, "\"" + pCmd + "\" terminated successfully.");
+				Log.i(TAG, "\"" + pCmd + "\" terminated successfully.");
 			}
 		}
 		catch (Exception e)
 		{
-			Eventlog.printStackTrace(TAG, e);
+			Log.e(TAG,"Can't execute \"" + pCmd + "\" as root: " + e.getMessage());
 		}
 		
 		return retval;
@@ -159,7 +158,7 @@ public class Util
 				try {
 					md5Old = Util.mkMD5Hash(file.getAbsolutePath());
 				} catch(Exception e) {
-					Eventlog.e(TAG,"copyFileFromRAW(): Can't create md5 hash of existing file (id = " + pRAWID + "): " + e + " --- " + e.getMessage());
+					Log.e(TAG,"copyFileFromRAW(): Can't create md5 hash of existing file (id = " + pRAWID + "): " + e + " --- " + e.getMessage());
 					return false;
 				}
 				try {
@@ -167,14 +166,14 @@ public class Util
 					is.close();
 					is = pContext.getApplicationContext().getResources().openRawResource(pRAWID);
 				} catch(Exception e) {
-					Eventlog.e(TAG,"copyFileFromRAW(): Can't create md5 hash of raw file (" + file.getAbsolutePath() + "): " + e + " --- " + e.getMessage());
+					Log.e(TAG,"copyFileFromRAW(): Can't create md5 hash of raw file (" + file.getAbsolutePath() + "): " + e + " --- " + e.getMessage());
 					return false;
 				}
 				if (Arrays.equals(md5Old, md5New)) {
-					Eventlog.d(TAG, "copyFileFromRAW(): Existing file (" + file.getAbsolutePath() + ") and raw file are equal. Doing nothing!");
+					Log.d(TAG, "copyFileFromRAW(): Existing file (" + file.getAbsolutePath() + ") and raw file are equal. Doing nothing!");
 					return true;
 				} else {
-					Eventlog.d(TAG, "copyFileFromRAW(): Existing file (" + file.getAbsolutePath() + ") and raw file are not equal. Start copying...");
+					Log.d(TAG, "copyFileFromRAW(): Existing file (" + file.getAbsolutePath() + ") and raw file are not equal. Start copying...");
 				}
 			}
 			
@@ -188,14 +187,14 @@ public class Util
 			os.close();
 			if (!file.setExecutable(true, false))
 			{
-				Eventlog.e(TAG, "copyFileFromRAW(): Could not make file executeable: " + pFilename);
+				Log.e(TAG, "copyFileFromRAW(): Could not make file executeable: " + pFilename);
 				return false;
 			}
 			return true;
 		}
 		catch (Exception e)
 		{
-			Eventlog.printStackTrace(TAG, e);
+			Log.e(TAG,"Can't copy raw resource to file \"" + pFilename + "\": " + e.getMessage());
 			return false;
 		}
 	}
@@ -224,7 +223,7 @@ public class Util
 				return null;
 			}
 
-			Eventlog.d(TAG,"Parsing pidof output...");
+			Log.d(TAG,"Parsing pidof output...");
 			String line = null;
 			StringTokenizer tokenizer = null;
 			
@@ -237,13 +236,13 @@ public class Util
 				}
 			}
 			in.close();
-			Eventlog.d(TAG,"Got " + list.size() + " pids from pidof");
+			Log.d(TAG,"Got " + list.size() + " pids from pidof");
 
 			return list;
 		}
 		catch(Exception e)
 		{
-			Eventlog.printStackTrace(TAG, e);
+			Log.e(TAG,"Can't retrieve process ids of \"" + pCmd + "\": " + e.getMessage());
 		}		
 		return null;
 	}
@@ -291,15 +290,15 @@ public class Util
 					switch (pStatus)
 					{
 						case RUNNING:
-							Eventlog.d(TAG,"module (" + pModulename + ") status is running and pid file exists. all fine. :-)");
+							Log.d(TAG,"module (" + pModulename + ") status is running and pid file exists. all fine. :-)");
 							return ModuleStatus.RUNNING;
 							
 						case STOPPED:
-							Eventlog.e(TAG,"module (" + pModulename + ") status is stopped, but stap is running. Updating status...");
+							Log.e(TAG,"module (" + pModulename + ") status is stopped, but stap is running. Updating status...");
 							return ModuleStatus.RUNNING;
 							
 						case CRASHED:
-							Eventlog.e(TAG,"module (" + pModulename + ") status is crasehd, but stap is running. Updating status...");
+							Log.e(TAG,"module (" + pModulename + ") status is crasehd, but stap is running. Updating status...");
 							return ModuleStatus.RUNNING;
 					}
 				}
@@ -308,24 +307,23 @@ public class Util
 					switch (pStatus)
 					{
 						case RUNNING:
-							Eventlog.e(TAG,"module (" + pModulename + ") status is running, but stap is not running. Updating status....");
-							Eventlog.e(TAG,"module (" + pModulename + ") status is crashed. Removing pid file: " + pidFile.delete());
+							Log.e(TAG,"module (" + pModulename + ") status is running, but stap is not running. Updating status....");
+							Log.e(TAG,"module (" + pModulename + ") status is crashed. Removing pid file: " + pidFile.delete());
 							return ModuleStatus.CRASHED;
 							
 						case STOPPED:
-							Eventlog.d(TAG,"module (" + pModulename + ") status is stopped, but pidfile exsits. Deleting it: " + pidFile.delete());
+							Log.d(TAG,"module (" + pModulename + ") status is stopped, but pidfile exsits. Deleting it: " + pidFile.delete());
 							return ModuleStatus.STOPPED;
 							
 						case CRASHED:
-							Eventlog.d(TAG,"module (" + pModulename + ") status is crashed, but pidfile exsits. Deleting it: " + pidFile.delete());
+							Log.d(TAG,"module (" + pModulename + ") status is crashed, but pidfile exsits. Deleting it: " + pidFile.delete());
 							return ModuleStatus.CRASHED;
 					}
 				}
 			}
 			catch (IOException e)
 			{
-				Eventlog.e(TAG,"Error reading pid file of module " + pModulename + ". Try again later.");
-				Eventlog.printStackTrace(TAG, e);
+				Log.e(TAG,"Error reading pid file of module " + pModulename + ". Try again later.");
 				return ModuleStatus.CRASHED;
 			}
 		}
@@ -334,20 +332,20 @@ public class Util
 			switch (pStatus)
 			{
 				case RUNNING:
-					Eventlog.e(TAG,"module (" + pModulename + ") status is running, but stap (no pid file) is not running. Updating status.... ");
+					Log.e(TAG,"module (" + pModulename + ") status is running, but stap (no pid file) is not running. Updating status.... ");
 					return ModuleStatus.CRASHED;
 					
 				case STOPPED:
-					Eventlog.d(TAG,"module (" + pModulename + ") status is stopped and no pid file exists. all fine. :-)");
+					Log.d(TAG,"module (" + pModulename + ") status is stopped and no pid file exists. all fine. :-)");
 					return ModuleStatus.STOPPED;
 					
 				case CRASHED:
-					Eventlog.d(TAG,"module (" + pModulename + ") status is crashed and no pid file exists. all fine. :-)");
+					Log.d(TAG,"module (" + pModulename + ") status is crashed and no pid file exists. all fine. :-)");
 					return ModuleStatus.CRASHED;
 			}
 		}
 		/* Although i hate this kind of comments: this should never happen */
-		Eventlog.e(TAG,"checkModuleStatus() reached end of function. Module: " + pModulename + ", Status: " + pStatus);
+		Log.e(TAG,"checkModuleStatus() reached end of function. Module: " + pModulename + ", Status: " + pStatus);
 		return ModuleStatus.STOPPED;
 	}
 	

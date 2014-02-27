@@ -11,6 +11,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +20,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.service.Module;
 import com.systemtap.android.service.SystemTapBinder;
 import com.systemtap.android.service.SystemTapService;
@@ -89,12 +89,12 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
     	if (mSystemTapService != null)
     	{
         	mSystemTapService.unregisterObserver(this);
-    		Eventlog.d(TAG,"SystemTapService unbounded");
+    		Log.d(TAG,"SystemTapService unbounded");
     		mSystemTapService = null;
     	}
     	else
     	{
-    		Eventlog.e(TAG, "mSystemTapService is null!");
+    		Log.e(TAG, "mSystemTapService is null!");
     	}
 		this.getActivity().unbindService(mConnection);
     	mMutex.unlock();
@@ -115,7 +115,7 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
 		}
 		else
 		{
-			Eventlog.e(TAG,"onClick(): unknown source");
+			Log.e(TAG,"onClick(): unknown source");
 		}
 	}
     
@@ -129,7 +129,7 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
         	/* the ModuleListAdapter wants to get notified if the set of modules has changed */
         	mSystemTapService.registerObserver(ModulesOverviewFragment.this);
         	ModulesOverviewFragment.this.mMutex.unlock();
-    		Eventlog.d(TAG,"SystemTapService bounded");
+    		Log.d(TAG,"SystemTapService bounded");
         }
 
         public void onServiceDisconnected(ComponentName className)

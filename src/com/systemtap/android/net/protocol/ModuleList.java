@@ -2,9 +2,10 @@ package com.systemtap.android.net.protocol;
 
 import java.util.LinkedList;
 
+import android.util.Log;
+
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.protocol.SystemTapMessage.MessageType;
 import com.systemtap.android.net.protocol.SystemTapMessage.ModuleInfo;
 import com.systemtap.android.net.protocol.SystemTapMessage.ModuleListPayload;
@@ -40,7 +41,7 @@ public class ModuleList extends AbstractMessage {
 			LinkedList<ModuleInfo> moduleInfos = new LinkedList<ModuleInfo>(moduleListPayload.getModulesList());
 			moduleList = new ModuleList(moduleInfos);
 		} catch (InvalidProtocolBufferException e) {
-			Eventlog.e(TAG,"Can't parse payload: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"Can't parse payload: " + e + " -- " + e.getMessage());
 		}
 		return moduleList;
 	}

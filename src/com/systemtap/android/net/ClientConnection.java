@@ -8,8 +8,9 @@ import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import android.util.Log;
+
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.protocol.AbstractMessage;
 import com.systemtap.android.net.protocol.Ack;
 import com.systemtap.android.net.protocol.DeleteModule;
@@ -60,9 +61,9 @@ public class ClientConnection implements Runnable {
 			mSocket.close();
 			mClientThread.join();
 		} catch (IOException e) {
-			Eventlog.e(TAG,"stop(): Can't close socket: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"stop(): Can't close socket: " + e + " -- " + e.getMessage());
 		} catch (InterruptedException e) {
-			Eventlog.e(TAG,"stop(): Can't wait for client thread: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"stop(): Can't wait for client thread: " + e + " -- " + e.getMessage());
 		}
 	}
 	
@@ -76,7 +77,7 @@ public class ClientConnection implements Runnable {
 		try {
 			in = new DataInputStream(mSocket.getInputStream());
 		} catch (IOException e) {
-			Eventlog.e(TAG,"run(): Can't retrieve inputstream: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"run(): Can't retrieve inputstream: " + e + " -- " + e.getMessage());
 		}
 		while (mRunning) {
 			try {
@@ -92,25 +93,25 @@ public class ClientConnection implements Runnable {
 				stapMsg = SystemTapMessageObject.parseFrom(buffer);
 				this.handleMessage(stapMsg);
 			} catch (InvalidProtocolBufferException e) {
-				Eventlog.e(TAG,"run(): Can't parse SystemTapMessageObject: " + e + " -- " + e.getMessage());
+				Log.e(TAG,"run(): Can't parse SystemTapMessageObject: " + e + " -- " + e.getMessage());
 			} catch (IOException e) {
 				if (mRunning) {
 					// Avoid an infinity loop
 					readErrors++;
-					Eventlog.e(TAG,"run(): Error reading from stream: " + e + " -- " + e.getMessage());
+					Log.e(TAG,"run(): Error reading from stream: " + e + " -- " + e.getMessage());
 					if (readErrors >= 2) {
 						mRunning = false;
-						Eventlog.e(TAG,"run(): Tried to read " + readErrors + " times from inputstream. Terminating.");
+						Log.e(TAG,"run(): Tried to read " + readErrors + " times from inputstream. Terminating.");
 					}
 				}
 			}
 			buffer = null;
 		}
-		Eventlog.d(TAG,"run(): ClientConnection terminated.");
+		Log.d(TAG,"run(): ClientConnection terminated.");
 		try {
 			mSocket.close();
 		} catch (IOException e) {
-			Eventlog.e(TAG,"run(): Can't close socket: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"run(): Can't close socket: " + e + " -- " + e.getMessage());
 		}
 		mSocket = null;
 		mControlDaemon.onClientDisconnected(this);
@@ -120,7 +121,7 @@ public class ClientConnection implements Runnable {
 
 		SystemTapMessageObject pStapMsg = pAMsg.toSystemTapMessageObject();
 		if (pStapMsg == null) {
-			Eventlog.e(TAG,"sendMessage(): Can't create SystemTapMessageObject from AbstractMessage");
+			Log.e(TAG,"sendMessage(): Can't create SystemTapMessageObject from AbstractMessage");
 			return false;
 		}
 		// Serialize the message to a byte array
@@ -131,7 +132,7 @@ public class ClientConnection implements Runnable {
 			out.write(data);
 			return true;
 		} catch (IOException e) {
-			Eventlog.e(TAG,"sendMessage(): Error writing SystemTapMessageObject to stream: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"sendMessage(): Error writing SystemTapMessageObject to stream: " + e + " -- " + e.getMessage());
 		}
 		return false;
 	}
@@ -140,7 +141,7 @@ public class ClientConnection implements Runnable {
 		
 		switch (pMsg.getType()) {
 			case ACK:
-				Eventlog.d(TAG,"handleMessage(): Weird! I should never receive an ACK.");
+				Log.d(TAG,"handleMessage(): Weird! I should never receive an ACK.");
 				break;
 			case LIST_MODULES:
 				Collection<Module> modules = mSystemTapService.getModules();
@@ -154,65 +155,65 @@ public class ClientConnection implements Runnable {
 				}
 				ModuleList moduleList = new ModuleList(moduleinfos);
 				if (this.sendMessage(moduleList)) {
-					Eventlog.d(TAG,"Sent a module list to " + this.getRemoteAddress());
+					Log.d(TAG,"Sent a module list to " + this.getRemoteAddress());
 				} else {
-					Eventlog.e(TAG,"Can't send a module list to " + this.getRemoteAddress());
+					Log.e(TAG,"Can't send a module list to " + this.getRemoteAddress());
 				}
 				break;
 			case MODULE_LIST:
-				Eventlog.d(TAG,"handleMessage(): Weird! I should never receive a MODULE_LIST.");
+				Log.d(TAG,"handleMessage(): Weird! I should never receive a MODULE_LIST.");
 				break;
 			case SEND_MODULE:
 				SendModule sendModule = SendModule.fromSystemTapMessageObject(pMsg);
 				if (sendModule != null) {
-					Eventlog.d(TAG,"Got SendModule: " + sendModule);
+					Log.d(TAG,"Got SendModule: " + sendModule);
 					if (mSystemTapService.addModule(sendModule.getName(),sendModule.getData())) {
 						if (!this.sendMessage(new Ack(MessageType.SEND_MODULE))) {
-							Eventlog.e(TAG,"handleMessage(): Can't send Ack(SEND_MODULE).");
+							Log.e(TAG,"handleMessage(): Can't send Ack(SEND_MODULE).");
 						}
 					}
 				} else {
-					Eventlog.e(TAG,"handleMessage(): Can't generate SendModule from SystemTapMessageObject.");
+					Log.e(TAG,"handleMessage(): Can't generate SendModule from SystemTapMessageObject.");
 				}
 				break;
 			case DELETE_MODULE:
 				DeleteModule deleteModule = DeleteModule.fromSystemTapMessageObject(pMsg);
 				if (deleteModule != null) {
-					Eventlog.d(TAG,"Got SendModule: " + deleteModule);
+					Log.d(TAG,"Got SendModule: " + deleteModule);
 					mSystemTapService.deleteModule(deleteModule.getName());
 					if (!this.sendMessage(new Ack(MessageType.DELETE_MODULE))) {
-						Eventlog.e(TAG,"handleMessage(): Can't send Ack(DELETE_MODULE).");
+						Log.e(TAG,"handleMessage(): Can't send Ack(DELETE_MODULE).");
 					}
 				} else {
-					Eventlog.e(TAG,"handleMessage(): Can't generate DeleteModule from SystemTapMessageObject.");
+					Log.e(TAG,"handleMessage(): Can't generate DeleteModule from SystemTapMessageObject.");
 				}
 				break;
 			case START_MODULE:
 				StartModule startModule = StartModule.fromSystemTapMessageObject(pMsg);
 				if (startModule != null) {
-					Eventlog.d(TAG,"Got SendModule: " + startModule);
+					Log.d(TAG,"Got SendModule: " + startModule);
 					mSystemTapService.startModule(startModule.getName());
 					if (!this.sendMessage(new Ack(MessageType.START_MODULE))) {
-						Eventlog.e(TAG,"handleMessage(): Can't send Ack(START_MODULE).");
+						Log.e(TAG,"handleMessage(): Can't send Ack(START_MODULE).");
 					}
 				} else {
-					Eventlog.e(TAG,"handleMessage(): Can't generate StartModule from SystemTapMessageObject.");
+					Log.e(TAG,"handleMessage(): Can't generate StartModule from SystemTapMessageObject.");
 				}
 				break;
 			case STOP_MODULE:
 				StopModule stopModule = StopModule.fromSystemTapMessageObject(pMsg);
 				if (stopModule != null) {
-					Eventlog.d(TAG,"Got SendModule: " + stopModule);
+					Log.d(TAG,"Got SendModule: " + stopModule);
 					mSystemTapService.stopModule(stopModule.getName());
 					if (!this.sendMessage(new Ack(MessageType.STOP_MODULE))) {
-						Eventlog.e(TAG,"handleMessage(): Can't send Ack(STOP_MODULE).");
+						Log.e(TAG,"handleMessage(): Can't send Ack(STOP_MODULE).");
 					}
 				} else {
-					Eventlog.e(TAG,"handleMessage(): Can't generate StopModule from SystemTapMessageObject.");
+					Log.e(TAG,"handleMessage(): Can't generate StopModule from SystemTapMessageObject.");
 				}
 				break;
 			default:
-				Eventlog.e(TAG,"handleMessage(): Unknown message type: " + pMsg.getType());
+				Log.e(TAG,"handleMessage(): Unknown message type: " + pMsg.getType());
 				break;
 		}
 	}

@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +24,6 @@ import android.widget.ListView;
 import android.widget.Spinner;
 
 import com.actionbarsherlock.app.SherlockFragment;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.service.Module;
 import com.systemtap.android.service.SystemTapBinder;
 import com.systemtap.android.service.SystemTapService;
@@ -110,12 +110,12 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
     	{
         	mSystemTapService.unregisterObserver(this);
     		this.getActivity().unbindService(mConnection);
-    		Eventlog.d(TAG,"SystemTapService unbounded");
+    		Log.d(TAG,"SystemTapService unbounded");
     		mSystemTapService = null;
     	}
     	else
     	{
-    		Eventlog.e(TAG, "mSystemTapService is null!");
+    		Log.e(TAG, "mSystemTapService is null!");
     	}
     	mMutex.unlock();
     	
@@ -133,7 +133,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 			args.putSerializable(SystemTapActivity.LOGFILE_OBJECT, file);
 			String name = this.getSelectedModule();
 			if (name == null) {
-				Eventlog.d(TAG, "No module available");
+				Log.d(TAG, "No module available");
 				return;
 			}
 			args.putString(SystemTapActivity.MODULE_ID, name);
@@ -141,7 +141,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 		}
 		else
 		{
-			Eventlog.e(TAG,"onClick(): unknown source");
+			Log.e(TAG,"onClick(): unknown source");
 		}
 	}
 
@@ -154,7 +154,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 		}
 		else
 		{
-			Eventlog.e(TAG,"onClick(): unknown source");
+			Log.e(TAG,"onClick(): unknown source");
 		}	
 	}
 
@@ -178,7 +178,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 	{
 		if (mSystemTapService == null)
 		{
-			Eventlog.e(TAG,"refreshFileList(): mSystemTapService is null");
+			Log.e(TAG,"refreshFileList(): mSystemTapService is null");
 			return;
 		}
 		String moduleName = this.getSelectedModule();
@@ -200,7 +200,7 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
 		else
 		{
 			/* The dummy item was selected, no files to display */
-			Eventlog.d(TAG,"Dummy item selected");
+			Log.d(TAG,"Dummy item selected");
 		}
 	}
 
@@ -263,12 +263,12 @@ public class FilesOverviewFragment extends SherlockFragment implements OnItemCli
         	}
         	else
         	{
-        		Eventlog.e(FilesOverviewFragment.TAG,"onServiceConnected(): No item selected");
+        		Log.e(FilesOverviewFragment.TAG,"onServiceConnected(): No item selected");
         	}
         	/* the ModuleSpinnerAdapter wants to get notified if the set of modules has changed */
         	mSystemTapService.registerObserver(FilesOverviewFragment.this);
         	FilesOverviewFragment.this.mMutex.unlock();
-    		Eventlog.d(TAG,"SystemTapService bounded");
+    		Log.d(TAG,"SystemTapService bounded");
         }
 
         public void onServiceDisconnected(ComponentName className)

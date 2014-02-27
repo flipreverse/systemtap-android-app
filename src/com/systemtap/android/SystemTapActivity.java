@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -34,7 +35,6 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
 import com.systemtap.android.service.Module;
 import com.systemtap.android.service.SystemTapBinder;
@@ -128,31 +128,31 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 		{
 			if (mSelectedModule == null)
 			{
-				Eventlog.e(TAG, "onClick(): mSelectedModule is null");
+				Log.e(TAG, "onClick(): mSelectedModule is null");
 				return;
 			}
 			Module module = mSystemTapService.getModule(mSelectedModule);
 			if (module == null)
 			{
-				Eventlog.e(TAG,"onClick(): module is null");
+				Log.e(TAG,"onClick(): module is null");
 				return;
 			}
 			String selectedAction = (String)mSpinnerModuleDetailsAction.getSelectedItem();
 			if (selectedAction == null) {
-				Eventlog.e(TAG, "onClick(): selectedAction is null");
+				Log.e(TAG, "onClick(): selectedAction is null");
 				return;
 			}
 			if (selectedAction.equalsIgnoreCase(this.getString(R.string.stap_module_details_action_stop))) {
 				if (module.getStatus() == ModuleStatus.RUNNING) {
 					mSystemTapService.stopModule(module.getName());
 				} else {
-					Eventlog.e(TAG, "onClick(): User wants to stop module \"" + module.getName() + "\", but module is not running.");
+					Log.e(TAG, "onClick(): User wants to stop module \"" + module.getName() + "\", but module is not running.");
 				}
 			} else if (selectedAction.equalsIgnoreCase(this.getString(R.string.stap_module_details_action_start))) {
 				if (module.getStatus() == ModuleStatus.STOPPED || module.getStatus() == ModuleStatus.CRASHED) {
 					mSystemTapService.startModule(module.getName());
 				} else {
-					Eventlog.e(TAG, "onClick(): User wants to start module \"" + module.getName() + "\", but module is running.");
+					Log.e(TAG, "onClick(): User wants to start module \"" + module.getName() + "\", but module is running.");
 				}
 			} else if (selectedAction.equalsIgnoreCase(this.getString(R.string.stap_module_details_action_delete))) {
 				this.showDialog(SystemTapActivity.DELETE_MODULE_DIALOGUE);
@@ -329,13 +329,13 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 				moduleName = pArgs.getString(SystemTapActivity.MODULE_ID);
 				if (moduleName == null)
 				{
-					Eventlog.e(TAG, "onPrepareDialog(): moduleName is null");
+					Log.e(TAG, "onPrepareDialog(): moduleName is null");
 					break;
 				}
 				Module module = this.mSystemTapService.getModule(moduleName);
 				if (module == null)
 				{
-					Eventlog.e(TAG, "onPrepareDialog(): module is null");
+					Log.e(TAG, "onPrepareDialog(): module is null");
 					break;
 				}
 				
@@ -349,7 +349,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 				moduleName = pArgs.getString(SystemTapActivity.MODULE_ID);
 				if (file == null)
 				{
-					Eventlog.e(TAG,"file not given");
+					Log.e(TAG,"file not given");
 					break;
 				}
 				/* Get file name */
@@ -388,7 +388,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 						}
 						catch (IOException e)
 						{
-							Eventlog.printStackTrace(TAG, e);
+							Log.e(TAG,"Could not read file (" + file.getAbsolutePath() + ") content:" + e.getMessage());
 						}
 					}
 				});
@@ -510,7 +510,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
             	if (mSystemTapService != null)
             	{
             		this.unbindService(mConnection);
-            		Eventlog.d(TAG,"SystemTapService unbounded");
+            		Log.d(TAG,"SystemTapService unbounded");
                 	mSystemTapService.unregisterObserver(this);
             		mSystemTapService = null;
             		this.stopService(intent);
@@ -518,7 +518,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
             	}
             	return true;
             case R.id.menuItemRefresh:
-        		Eventlog.d(TAG, "Refreshing file list");
+        		Log.d(TAG, "Refreshing file list");
         		mFilesOverviewFragment.refreshFileList();
             	return true;
             case R.id.menuItemSettings:
@@ -554,14 +554,14 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 					Module module = SystemTapActivity.this.mSystemTapService.getModule(SystemTapActivity.this.mSelectedModule);
 					if (module == null)
 					{
-						Eventlog.e(TAG,"update(): module is null");
+						Log.e(TAG,"update(): module is null");
 						return;
 					}
 					SystemTapActivity.this.updateModuleDetailsDialogue(module);
 				}
 				else
 				{
-					Eventlog.d(TAG, "update(): mSelectedModule is null");
+					Log.d(TAG, "update(): mSelectedModule is null");
 				}
 			}
 		});
@@ -598,13 +598,13 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
     	if (mSystemTapService != null)
     	{
     		this.unbindService(mConnection);
-    		Eventlog.d(TAG,"SystemTapService unbounded");
+    		Log.d(TAG,"SystemTapService unbounded");
         	mSystemTapService.unregisterObserver(this);
     		mSystemTapService = null;
     	}
     	else
     	{
-    		Eventlog.e(TAG, "mSystemTapService is null!");
+    		Log.e(TAG, "mSystemTapService is null!");
     	}
     	mMutex.unlock();
     	
@@ -644,7 +644,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
         	mSystemTapService = ((SystemTapBinder)service).getService();
         	mSystemTapService.registerObserver(SystemTapActivity.this);
         	SystemTapActivity.this.mMutex.unlock();
-    		Eventlog.d(TAG,"SystemTapService bounded");
+    		Log.d(TAG,"SystemTapService bounded");
         }
 
         public void onServiceDisconnected(ComponentName className)
@@ -663,7 +663,7 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 	public void onTabSelected(Tab pTab, FragmentTransaction pTransaction)
 	{
 		if (pTab == null || pTransaction == null) {
-			Eventlog.e(TAG,"tab null");
+			Log.e(TAG,"tab null");
 			return;
 		}
 		String tag = (String)pTab.getTag();

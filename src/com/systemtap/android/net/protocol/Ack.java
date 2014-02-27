@@ -1,8 +1,9 @@
 package com.systemtap.android.net.protocol;
 
+import android.util.Log;
+
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.protocol.SystemTapMessage.AckPayload;
 import com.systemtap.android.net.protocol.SystemTapMessage.MessageType;
 import com.systemtap.android.net.protocol.SystemTapMessage.SystemTapMessageObject;
@@ -33,7 +34,7 @@ public class Ack extends AbstractMessage {
 			AckPayload ackPayload = AckPayload.parseFrom(payload);
 			ack = new Ack(ackPayload.getAckedType());
 		} catch (InvalidProtocolBufferException e) {
-			Eventlog.e(TAG,"Can't parse payload: " + e.getMessage());
+			Log.e(TAG,"Can't parse payload: " + e.getMessage());
 		}
 		
 		return ack;

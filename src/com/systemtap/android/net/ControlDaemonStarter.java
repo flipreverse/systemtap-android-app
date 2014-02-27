@@ -10,9 +10,9 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.systemtap.android.R;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.service.SystemTapService;
 
 public class ControlDaemonStarter extends BroadcastReceiver {
@@ -63,9 +63,9 @@ public class ControlDaemonStarter extends BroadcastReceiver {
 							mControlDaemon.stop();
 						}
 						mControlDaemon = null;
-						Eventlog.d(TAG,"Port changed. Restarting ControlDaemon...");
+						Log.d(TAG,"Port changed. Restarting ControlDaemon...");
 					} else {
-						Eventlog.d(TAG,"ControlDaemon is not running. Wifi changed. Starting daemon...");
+						Log.d(TAG,"ControlDaemon is not running. Wifi changed. Starting daemon...");
 					}
 					// Parse the port from preferences
 					int port = Integer.valueOf(settings.getString(pContext.getString(R.string.pref_daemon_port), pContext.getString(R.string.default_daemon_port)));
@@ -73,15 +73,15 @@ public class ControlDaemonStarter extends BroadcastReceiver {
 					mControlDaemon = new ControlDaemon(port,stapService);
 					mControlDaemon.start();
 				} catch (IOException e) {
-					Eventlog.e(TAG,"Can't init and start ControlDaemon: " + e + " -- " + e.getMessage());
+					Log.e(TAG,"Can't init and start ControlDaemon: " + e + " -- " + e.getMessage());
 				} catch (NumberFormatException e) {
-					Eventlog.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
+					Log.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
 				}
 			}
 		} else {
 			// No wifi connection, but daemon is running. Stop it.
 			if (mControlDaemon != null) {
-				Eventlog.d(TAG,"ControlDaemon is running. Wifi changed. Stopping daemon...");
+				Log.d(TAG,"ControlDaemon is running. Wifi changed. Stopping daemon...");
 				mControlDaemon.stop();
 				mControlDaemon = null;
 			}

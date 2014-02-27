@@ -30,7 +30,6 @@ import android.widget.Toast;
 import com.systemtap.android.Config;
 import com.systemtap.android.R;
 import com.systemtap.android.SystemTapActivity;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
 
 public class SystemTapService extends Service
@@ -110,7 +109,7 @@ public class SystemTapService extends Service
 
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return;
 		}
 
@@ -128,7 +127,7 @@ public class SystemTapService extends Service
 	public boolean addModule(String pName, byte[] pData) {
 		File moduleFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + pName + Config.MODULE_EXT);
 		if (moduleFile.exists()) {
-			Eventlog.i(TAG,"addModule(): Module " + pName + " already present. It will be overwritten by the recently received module.");
+			Log.i(TAG,"addModule(): Module " + pName + " already present. It will be overwritten by the recently received module.");
 		}
 		/**
 		 * The module management keeps track of the module directory for added or deleted files. It analyzes them, if it is a systemtap module.
@@ -140,7 +139,7 @@ public class SystemTapService extends Service
 			out.write(pData);
 			out.close();
 		} catch(IOException e) {
-			Eventlog.e(TAG,"addModule(): Can't save module content to file (" + moduleFile.getAbsolutePath() + "): " + e.getMessage());
+			Log.e(TAG,"addModule(): Can't save module content to file (" + moduleFile.getAbsolutePath() + "): " + e.getMessage());
 			return false;
 		}
 		return true;
@@ -150,7 +149,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return;
 		}
 		
@@ -166,7 +165,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return;
 		}
 		
@@ -182,7 +181,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return;
 		}
 		/**
@@ -203,7 +202,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return null;
 		}
 		
@@ -214,7 +213,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return null;
 		}
 		
@@ -225,7 +224,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return null;
 		}
 		
@@ -250,7 +249,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return null;
 		}	
 		return mSystemTapHandler.getOutputFiles(pModulename);
@@ -285,7 +284,7 @@ public class SystemTapService extends Service
 	}
 	
 	public void deleteOutputFile(String pModulename, String pFilename) {
-		Eventlog.e(TAG,"delete file="+pFilename+",module="+pModulename);
+		Log.e(TAG,"delete file="+pFilename+",module="+pModulename);
 		Message msg = mSystemTapHandler.obtainMessage();
 		msg.what = SystemTapHandler.DELETE_OUTPUT_FILE;
 		Bundle data = new Bundle();
@@ -299,7 +298,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return;
 		}
 		
@@ -310,7 +309,7 @@ public class SystemTapService extends Service
 	{
 		if (!mInit || mInitFailed)
 		{
-			Eventlog.e(TAG, "public method on SystemTapService called, but service is not initialized!");
+			Log.e(TAG, "public method on SystemTapService called, but service is not initialized!");
 			return;
 		}
 		
@@ -346,17 +345,6 @@ public class SystemTapService extends Service
 		{
 			mInitFailed = true;
 			return;
-		}
-
-		try
-		{
-			Eventlog.initialize(Config.LOG_ABSOLUTE_PATH);
-		}
-		catch (IOException e)
-		{
-			Log.e(TAG,"The eventlog could not be started: " + e.getMessage());
-			Log.e(TAG,Config.LOG_ABSOLUTE_PATH);
-		    Toast.makeText(this, this.getText(R.string.stap_service_start_failed), Toast.LENGTH_SHORT).show();
 		}
 
 		/* Second extract all included scripts or binaries to our private data directory */
@@ -405,7 +393,7 @@ public class SystemTapService extends Service
 		mSystemTapBinder = new SystemTapBinder(this);
 		mInit = true;
 		
-		Eventlog.d(TAG,"Make sure that no stap process is already running at service startup");
+		Log.d(TAG,"Make sure that no stap process is already running at service startup");
 		LinkedList<String> list = new LinkedList<String>();
 		list.add("pid=-1");
 		list.add("busyboxdir=" + this.getFilesDir().getParent());
@@ -424,11 +412,11 @@ public class SystemTapService extends Service
         if (settings.getBoolean(this.getString(R.string.pref_restore_modules), false)) {
         	this.restoreModules();
         } else {
-			Eventlog.d(TAG,"No restore wanted, reset running modules to stopped.");
+			Log.d(TAG,"No restore wanted, reset running modules to stopped.");
         	// No restore, set all running modules to stopped
     		for (Module module : mModuleManagement.getModules()) {
     			if (module.getStatus() == ModuleStatus.RUNNING) {
-    				Eventlog.e(TAG,module.getName());
+    				Log.e(TAG,module.getName());
     				mModuleManagement.updateModuleStatus(module.getName(),ModuleStatus.STOPPED);
     			}
     		}
@@ -437,25 +425,25 @@ public class SystemTapService extends Service
 	
 	private void stopAllModules()
 	{
-		Eventlog.d(TAG, "Stopping all modules...");
+		Log.d(TAG, "Stopping all modules...");
 		for(Module module:mModuleManagement.getModules())
 		{
 			if (module.getStatus() == ModuleStatus.RUNNING)
 			{
-				Eventlog.d(TAG, "Stopping module: " + module.getName());
+				Log.d(TAG, "Stopping module: " + module.getName());
 				this.stopModule(module.getName());
 			}
 		}		
 	}
 	
 	private void restoreModules() {
-		Eventlog.d(TAG,"Restoring modules...");
+		Log.d(TAG,"Restoring modules...");
 		for (Module module : mModuleManagement.getModules()) {
 			if (module.getStatus() == ModuleStatus.RUNNING) {
-				Eventlog.d(TAG,"Module " + module.getName() + " was running on last shutdown. Restarting...");
+				Log.d(TAG,"Module " + module.getName() + " was running on last shutdown. Restarting...");
 				this.startModule(module.getName());
 			} else {
-				Eventlog.d(TAG,"Module " + module.getName() + " was not running on last shutdown.");
+				Log.d(TAG,"Module " + module.getName() + " was not running on last shutdown.");
 			}
 		}
 	}

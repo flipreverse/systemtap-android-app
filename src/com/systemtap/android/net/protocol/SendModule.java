@@ -1,8 +1,9 @@
 package com.systemtap.android.net.protocol;
 
+import android.util.Log;
+
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.protocol.SystemTapMessage.MessageType;
 import com.systemtap.android.net.protocol.SystemTapMessage.SendModulePayload;
 import com.systemtap.android.net.protocol.SystemTapMessage.SystemTapMessageObject;
@@ -48,7 +49,7 @@ public class SendModule extends AbstractMessage {
 			String name = sendModulePayload.getName();
 			sendModule = new SendModule(name,data);
 		} catch (InvalidProtocolBufferException e) {
-			Eventlog.e(TAG,"Can't parse payload: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"Can't parse payload: " + e + " -- " + e.getMessage());
 		}
 		return sendModule;
 	}

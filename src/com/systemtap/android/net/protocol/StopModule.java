@@ -1,8 +1,9 @@
 package com.systemtap.android.net.protocol;
 
+import android.util.Log;
+
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.net.protocol.SystemTapMessage.MessageType;
 import com.systemtap.android.net.protocol.SystemTapMessage.ModulePayload;
 import com.systemtap.android.net.protocol.SystemTapMessage.SystemTapMessageObject;
@@ -40,7 +41,7 @@ public class StopModule extends AbstractMessage {
 			String name = modulePayload.getName();
 			stopModule = new StopModule(name);
 		} catch (InvalidProtocolBufferException e) {
-			Eventlog.e(TAG,"Can't parse payload: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"Can't parse payload: " + e + " -- " + e.getMessage());
 		}
 		return stopModule;
 	}

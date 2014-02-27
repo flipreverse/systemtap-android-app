@@ -1,11 +1,11 @@
 package com.systemtap.android;
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.service.Module;
 
 
@@ -24,7 +24,7 @@ public class ModuleListAdapter extends ArrayAdapter<Module> {
 		Module module = this.getItem(pPosition);
 		if (module == null)
 		{
-			Eventlog.e(TAG,"caller requests unknown item: " + pPosition);
+			Log.e(TAG,"caller requests unknown item: " + pPosition);
 			return null;
 		}
 		

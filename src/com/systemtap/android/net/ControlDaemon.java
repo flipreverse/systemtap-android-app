@@ -5,7 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
 
-import com.systemtap.android.logging.Eventlog;
+import android.util.Log;
+
 import com.systemtap.android.service.SystemTapService;
 
 public class ControlDaemon implements Runnable {
@@ -35,9 +36,9 @@ public class ControlDaemon implements Runnable {
 			mServerSocket.close();
 			mServerThread.join();
 		} catch (IOException e) {
-			Eventlog.e(TAG,"stop(): Can't close socket: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"stop(): Can't close socket: " + e + " -- " + e.getMessage());
 		} catch (InterruptedException e) {
-			Eventlog.e(TAG,"stop(): Can't wait for server thread: " + e + " -- " + e.getMessage());
+			Log.e(TAG,"stop(): Can't wait for server thread: " + e + " -- " + e.getMessage());
 		}
 
 		LinkedList<ClientConnection> connections = null;
@@ -60,7 +61,7 @@ public class ControlDaemon implements Runnable {
 		Socket clientSocket = null;
 		mRunning = true;
 
-		Eventlog.d(TAG,"run(): Start listening on port " + mServerSocket.getLocalPort());
+		Log.d(TAG,"run(): Start listening on port " + mServerSocket.getLocalPort());
 		while (mRunning) {
 			try {
 				clientSocket = mServerSocket.accept();
@@ -72,10 +73,10 @@ public class ControlDaemon implements Runnable {
 				clientConnection.start();
 			} catch (IOException e) {
 				if (mRunning) {
-					Eventlog.e(TAG,"run(): Can't accept incoming connection: " + e.getMessage());
+					Log.e(TAG,"run(): Can't accept incoming connection: " + e.getMessage());
 				}
 			}
 		}
-		Eventlog.d(TAG,"run(): Finished accepting incoming connections.");
+		Log.d(TAG,"run(): Finished accepting incoming connections.");
 	}
 }

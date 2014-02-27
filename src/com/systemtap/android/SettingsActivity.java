@@ -4,9 +4,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import com.actionbarsherlock.app.SherlockPreferenceActivity;
-import com.systemtap.android.logging.Eventlog;
 import com.systemtap.android.service.SystemTapService;
 
 public class SettingsActivity extends SherlockPreferenceActivity {
@@ -27,7 +27,7 @@ public class SettingsActivity extends SherlockPreferenceActivity {
 			addPreferencesFromResource(R.xml.preferences);
 		} catch (ClassCastException e) {
 			/* oh no, it did not worked :-( */
-			Eventlog.e(TAG, "Shared preferences are corrupt! Resetting to default values.");
+			Log.e(TAG, "Shared preferences are corrupt! Resetting to default values.");
 			/* reset the default preferences object ... */
 			SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 			SharedPreferences.Editor editor = preferences.edit();
