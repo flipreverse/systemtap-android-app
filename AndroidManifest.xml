@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="edu.udo.cs.ess.systemtap"
+    package="com.systemtap.android"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="edu.udo.cs.ess.systemtap.service.SystemTapService" >
+        <service android:name="com.systemtap.android.service.SystemTapService" >
         </service>
 
         <activity

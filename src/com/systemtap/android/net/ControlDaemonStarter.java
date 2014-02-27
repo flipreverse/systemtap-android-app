@@ -1,0 +1,90 @@
+package com.systemtap.android.net;
+
+import java.io.IOException;
+
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
+
+import com.systemtap.android.R;
+import com.systemtap.android.logging.Eventlog;
+import com.systemtap.android.service.SystemTapService;
+
+public class ControlDaemonStarter extends BroadcastReceiver {
+
+	private static final String TAG = ControlDaemonStarter.class.getSimpleName();
+	private ControlDaemon mControlDaemon;
+	private SystemTapService mSystemTapService;
+	private IntentFilter mIntentFilter;	
+	
+	public ControlDaemonStarter(SystemTapService pSystemTapService) {
+		mSystemTapService = pSystemTapService;
+		mIntentFilter = new IntentFilter();
+		mIntentFilter.addAction("android.net.wifi.STATE_CHANGE");
+		mIntentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+		mSystemTapService.registerReceiver(this,mIntentFilter);
+		mControlDaemon = null;
+	}
+
+	@Override
+	public void onReceive(Context pContext, Intent pIntent) {
+		this.controlDaemon(pContext,false);
+	}
+
+	public void reloadSettings() {
+		this.controlDaemon(mSystemTapService,true);
+	}
+	
+	public synchronized void stop() {
+		mSystemTapService.unregisterReceiver(this);
+		if (mControlDaemon != null) {
+			mControlDaemon.stop();
+		}
+	}
+
+	private synchronized void controlDaemon(Context pContext, boolean pReload) {
+		ConnectivityManager connManager = (ConnectivityManager) pContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo netInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		SystemTapService stapService = (SystemTapService)pContext;
+
+		// Got wifi connection?
+		if (netInfo.isConnected()) {
+			// Daemon already running?
+			if (mControlDaemon == null || pReload) {
+				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(pContext);
+				try {
+					if (pReload) {
+						if (mControlDaemon != null) {
+							mControlDaemon.stop();
+						}
+						mControlDaemon = null;
+						Eventlog.d(TAG,"Port changed. Restarting ControlDaemon...");
+					} else {
+						Eventlog.d(TAG,"ControlDaemon is not running. Wifi changed. Starting daemon...");
+					}
+					// Parse the port from preferences
+					int port = Integer.valueOf(settings.getString(pContext.getString(R.string.pref_daemon_port), pContext.getString(R.string.default_daemon_port)));
+					// Init and start control daemon
+					mControlDaemon = new ControlDaemon(port,stapService);
+					mControlDaemon.start();
+				} catch (IOException e) {
+					Eventlog.e(TAG,"Can't init and start ControlDaemon: " + e + " -- " + e.getMessage());
+				} catch (NumberFormatException e) {
+					Eventlog.e(TAG,"Can't parse number of parallel running modules: " + e + " -- " + e.getMessage());
+				}
+			}
+		} else {
+			// No wifi connection, but daemon is running. Stop it.
+			if (mControlDaemon != null) {
+				Eventlog.d(TAG,"ControlDaemon is running. Wifi changed. Stopping daemon...");
+				mControlDaemon.stop();
+				mControlDaemon = null;
+			}
+		}
+	}
+}
