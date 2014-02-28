@@ -191,6 +191,10 @@ public class ModuleManagement extends Observable
 				else
 				{
 					Log.d(TAG, "No, it does not exist. Delete it from database.");
+					File moduleConfFile = new File(Config.MODULES_ABSOLUTE_PATH + File.separator + module.getName()  + Config.MODULE_CONF_FILE_EXT);
+					if (moduleConfFile.exists()) {
+						moduleConfFile.delete();	
+					}
 					mModules.remove(module.getName());
 					changed = true;
 				}
