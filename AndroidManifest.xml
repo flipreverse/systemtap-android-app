@@ -19,7 +19,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="edu.udo.cs.ess.systemtap.SystemTapActivity"
+            android:name=".SystemTapActivity"
             android:label="@string/title_activity_systemtap" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -32,11 +32,11 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.systemtap.android.service.SystemTapService" >
+        <service android:name=".service.SystemTapService" >
         </service>
 
         <activity
-            android:name="edu.udo.cs.ess.systemtap.SettingsActivity"
+            android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
         <receiver android:enabled="true" android:name=".service.BootReceiver">

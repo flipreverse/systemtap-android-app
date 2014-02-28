@@ -1,27 +1,16 @@
 package SystemTapMessage;
 
-option java_package = "edu.udo.cs.ess.systemtap.net.protocol";
+option java_package = "com.systemtap.android.net";
 
 enum MessageType {
 	ACK				=	1;
 	SEND_MODULE		=	2;
 	LIST_MODULES	=	3;
 	MODULE_LIST		=	4;
-	DELETE_MODULE	=	5;
-	START_MODULE	=	6;
-	STOP_MODULE		=	7;
+	CONTROL_MODULE	=	5;
 }
 
-message SystemTapMessageObject {
-	required MessageType	type	=	1;
-	optional bytes			payload	=	2;
-}
-
-message ModulePayload {
-	required string			name	=	1;
-}
-
-message SendModulePayload {
+message SendModule {
 	required string			name	=	1;
 	required bytes			data	=	2;
 }
@@ -31,21 +20,17 @@ message ModuleInfo {
 	required ModuleStatus	status	=	2;
 }
 
-message ModuleListPayload {
+message ModuleList {
 	repeated ModuleInfo		modules	=	1;
 }	
 
-message AckPayload {
-	required MessageType	ackedType	=	1;
+message Ack {
+	required int32	ackedType	=	1;
 }
 
 enum ModuleStatus {
 	RUNNING		=	0;
 	STOPPED		=	1;
 	CRASHED		=	2;
-}
-
-message ModuleType {
-	required string			name	=	1;
-	required ModuleStatus	status	=	2;
+	DELETED		=	3;
 }

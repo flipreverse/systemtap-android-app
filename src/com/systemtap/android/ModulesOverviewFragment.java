@@ -154,6 +154,7 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
 		if (activity == null) {
 			return;
 		}
+
 		activity.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -163,7 +164,7 @@ public class ModulesOverviewFragment extends SherlockFragment implements OnItemC
 		        		mModuleListAdapter.add(module);
 		        	}
 				} else {
-					//mModuleListAdapter.addAll(modules);
+					mModuleListAdapter.addAll(modules);
 				}
 			}
 		});

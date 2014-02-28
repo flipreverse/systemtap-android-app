@@ -15,7 +15,7 @@ import android.util.Log;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.systemtap.android.Config;
-import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
+import com.systemtap.android.net.SystemTapMessage.ModuleStatus;
 
 public class ModuleManagement extends Observable
 {

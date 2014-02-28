@@ -11,16 +11,12 @@ import java.util.LinkedList;
 import android.util.Log;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import com.systemtap.android.net.protocol.AbstractMessage;
-import com.systemtap.android.net.protocol.Ack;
-import com.systemtap.android.net.protocol.DeleteModule;
-import com.systemtap.android.net.protocol.ModuleList;
-import com.systemtap.android.net.protocol.SendModule;
-import com.systemtap.android.net.protocol.StartModule;
-import com.systemtap.android.net.protocol.StopModule;
-import com.systemtap.android.net.protocol.SystemTapMessage.MessageType;
-import com.systemtap.android.net.protocol.SystemTapMessage.ModuleInfo;
-import com.systemtap.android.net.protocol.SystemTapMessage.SystemTapMessageObject;
+import com.systemtap.android.net.SystemTapMessage.Ack;
+import com.systemtap.android.net.SystemTapMessage.MessageType;
+import com.systemtap.android.net.SystemTapMessage.ModuleInfo;
+import com.systemtap.android.net.SystemTapMessage.ModuleList;
+import com.systemtap.android.net.SystemTapMessage.ModuleStatus;
+import com.systemtap.android.net.SystemTapMessage.SendModule;
 import com.systemtap.android.service.Module;
 import com.systemtap.android.service.SystemTapService;
 
@@ -68,9 +64,8 @@ public class ClientConnection implements Runnable {
 	}
 	
 	public void run() {
-		SystemTapMessageObject stapMsg = null;
 		byte[] buffer;
-		int msgObjectSize = 0, readErrors = 0;
+		int msgObjectSize = 0, readErrors = 0, msgType = 0;
 		DataInputStream in = null;
 		mRunning = true;
 
@@ -81,17 +76,19 @@ public class ClientConnection implements Runnable {
 		}
 		while (mRunning) {
 			try {
-				// First, read the message object size
+				// First, read the message type
+				msgType = in.readInt();
+				// Second, read the message object size
 				msgObjectSize = in.readInt();
-				if (msgObjectSize == 0) {
-					continue;
+				if (msgObjectSize != 0) {
+					// Allocate a buffer being large enough to read the message object at once from stream
+					buffer = new byte[msgObjectSize];
+					// Read message object at once
+					in.readFully(buffer);
+				} else {
+					buffer = new byte[1];
 				}
-				// Allocate a buffer being large enough to read the message object at once from stream
-				buffer = new byte[msgObjectSize];
-				// Read message object at once
-				in.readFully(buffer);
-				stapMsg = SystemTapMessageObject.parseFrom(buffer);
-				this.handleMessage(stapMsg);
+				this.handleMessage(msgType, buffer);
 			} catch (InvalidProtocolBufferException e) {
 				Log.e(TAG,"run(): Can't parse SystemTapMessageObject: " + e + " -- " + e.getMessage());
 			} catch (IOException e) {
@@ -117,19 +114,12 @@ public class ClientConnection implements Runnable {
 		mControlDaemon.onClientDisconnected(this);
 	}
 	
-	private boolean sendMessage(AbstractMessage pAMsg) {
-
-		SystemTapMessageObject pStapMsg = pAMsg.toSystemTapMessageObject();
-		if (pStapMsg == null) {
-			Log.e(TAG,"sendMessage(): Can't create SystemTapMessageObject from AbstractMessage");
-			return false;
-		}
-		// Serialize the message to a byte array
-		byte[] data = pStapMsg.toByteArray();
+	private boolean sendMessage(int pMsgType, byte pBuffer[]) {
 		try {
 			DataOutputStream out = new DataOutputStream(mSocket.getOutputStream());
-			out.writeInt(data.length);
-			out.write(data);
+			out.writeInt(pMsgType);
+			out.writeInt(pBuffer.length);
+			out.write(pBuffer);
 			return true;
 		} catch (IOException e) {
 			Log.e(TAG,"sendMessage(): Error writing SystemTapMessageObject to stream: " + e + " -- " + e.getMessage());
@@ -137,13 +127,23 @@ public class ClientConnection implements Runnable {
 		return false;
 	}
 	
-	private void handleMessage(SystemTapMessageObject pMsg) {
+	private boolean sendAck(int pMsgType) {
+		byte data[] = Ack.newBuilder()
+				  .setAckedType(pMsgType)
+				  .build()
+				  .toByteArray();
+		return this.sendMessage(MessageType.ACK_VALUE,data);
+	}
+	
+	private void handleMessage(int pMsgType, byte pBuffer[]) {
+		byte data[];
 		
-		switch (pMsg.getType()) {
-			case ACK:
+		switch (pMsgType) {
+			case MessageType.ACK_VALUE:
 				Log.d(TAG,"handleMessage(): Weird! I should never receive an ACK.");
 				break;
-			case LIST_MODULES:
+			case MessageType.LIST_MODULES_VALUE:
+				Log.d(TAG,"Got LIST_MODULES");
 				Collection<Module> modules = mSystemTapService.getModules();
 				LinkedList<ModuleInfo> moduleinfos = new LinkedList<ModuleInfo>();
 				for (Module module : modules) {
@@ -153,67 +153,70 @@ public class ClientConnection implements Runnable {
 										.build();
 					moduleinfos.add(info);
 				}
-				ModuleList moduleList = new ModuleList(moduleinfos);
-				if (this.sendMessage(moduleList)) {
+				data = ModuleList.newBuilder()
+						  .addAllModules(moduleinfos)
+						  .build()
+						  .toByteArray();
+				if (this.sendMessage(MessageType.MODULE_LIST_VALUE,data)) {
 					Log.d(TAG,"Sent a module list to " + this.getRemoteAddress());
 				} else {
 					Log.e(TAG,"Can't send a module list to " + this.getRemoteAddress());
 				}
 				break;
-			case MODULE_LIST:
+			case MessageType.MODULE_LIST_VALUE:
 				Log.d(TAG,"handleMessage(): Weird! I should never receive a MODULE_LIST.");
 				break;
-			case SEND_MODULE:
-				SendModule sendModule = SendModule.fromSystemTapMessageObject(pMsg);
+			case MessageType.SEND_MODULE_VALUE:
+				SendModule sendModule = null;
+				try {
+					sendModule = SendModule.parseFrom(pBuffer);
+				} catch (InvalidProtocolBufferException e) {
+					Log.e(TAG,"Can't parse SEND_MODULE: " + e + " -- " + e.getMessage());
+				}
+				
 				if (sendModule != null) {
-					Log.d(TAG,"Got SendModule: " + sendModule);
-					if (mSystemTapService.addModule(sendModule.getName(),sendModule.getData())) {
-						if (!this.sendMessage(new Ack(MessageType.SEND_MODULE))) {
-							Log.e(TAG,"handleMessage(): Can't send Ack(SEND_MODULE).");
+					Log.d(TAG,"Got SEND_MODULE");
+					if (mSystemTapService.addModule(sendModule.getName(),sendModule.getData().toByteArray())) {
+						if (!this.sendAck(MessageType.SEND_MODULE_VALUE)) {
+							Log.e(TAG,"handleMessage(): Can't send Ackf for SEND_MODULE.");
 						}
 					}
-				} else {
-					Log.e(TAG,"handleMessage(): Can't generate SendModule from SystemTapMessageObject.");
 				}
 				break;
-			case DELETE_MODULE:
-				DeleteModule deleteModule = DeleteModule.fromSystemTapMessageObject(pMsg);
-				if (deleteModule != null) {
-					Log.d(TAG,"Got SendModule: " + deleteModule);
-					mSystemTapService.deleteModule(deleteModule.getName());
-					if (!this.sendMessage(new Ack(MessageType.DELETE_MODULE))) {
-						Log.e(TAG,"handleMessage(): Can't send Ack(DELETE_MODULE).");
-					}
-				} else {
-					Log.e(TAG,"handleMessage(): Can't generate DeleteModule from SystemTapMessageObject.");
+			case MessageType.CONTROL_MODULE_VALUE:
+				ModuleInfo moduleInfo = null;
+				try {
+					moduleInfo = ModuleInfo.parseFrom(pBuffer);
+				} catch (InvalidProtocolBufferException e) {
+					Log.e(TAG,"Can't parse CONTROL_MODULE: " + e + " -- " + e.getMessage());
 				}
-				break;
-			case START_MODULE:
-				StartModule startModule = StartModule.fromSystemTapMessageObject(pMsg);
-				if (startModule != null) {
-					Log.d(TAG,"Got SendModule: " + startModule);
-					mSystemTapService.startModule(startModule.getName());
-					if (!this.sendMessage(new Ack(MessageType.START_MODULE))) {
-						Log.e(TAG,"handleMessage(): Can't send Ack(START_MODULE).");
+				
+				if (moduleInfo != null) {
+					Log.d(TAG,"Got CONTROL_MODULE");
+					switch (moduleInfo.getStatus()) {
+						case RUNNING:
+								mSystemTapService.startModule(moduleInfo.getName());
+							break;
+	
+						case STOPPED:
+							mSystemTapService.stopModule(moduleInfo.getName());
+						break;
+	
+						case DELETED:
+							mSystemTapService.deleteModule(moduleInfo.getName());
+						break;
+
+						default:
+							Log.e(TAG,"Got unknown status for CONTROL_MODULE: " + moduleInfo.getStatus());
+						break;
 					}
-				} else {
-					Log.e(TAG,"handleMessage(): Can't generate StartModule from SystemTapMessageObject.");
-				}
-				break;
-			case STOP_MODULE:
-				StopModule stopModule = StopModule.fromSystemTapMessageObject(pMsg);
-				if (stopModule != null) {
-					Log.d(TAG,"Got SendModule: " + stopModule);
-					mSystemTapService.stopModule(stopModule.getName());
-					if (!this.sendMessage(new Ack(MessageType.STOP_MODULE))) {
-						Log.e(TAG,"handleMessage(): Can't send Ack(STOP_MODULE).");
+					if (!this.sendAck(MessageType.CONTROL_MODULE_VALUE)) {
+						Log.e(TAG,"handleMessage(): Can't send Ackf for DELETE_MODULE.");
 					}
-				} else {
-					Log.e(TAG,"handleMessage(): Can't generate StopModule from SystemTapMessageObject.");
 				}
 				break;
 			default:
-				Log.e(TAG,"handleMessage(): Unknown message type: " + pMsg.getType());
+				Log.e(TAG,"handleMessage(): Unknown message type: " + pMsgType);
 				break;
 		}
 	}

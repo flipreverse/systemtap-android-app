@@ -1,6 +1,6 @@
 package com.systemtap.android.service;
 
-import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
+import com.systemtap.android.net.SystemTapMessage.ModuleStatus;
 
 public class Module
 {	

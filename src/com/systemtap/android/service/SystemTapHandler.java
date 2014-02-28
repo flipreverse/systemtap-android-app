@@ -26,7 +26,7 @@ import android.widget.Toast;
 import com.systemtap.android.Config;
 import com.systemtap.android.R;
 import com.systemtap.android.net.ControlDaemonStarter;
-import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
+import com.systemtap.android.net.SystemTapMessage.ModuleStatus;
 
 
 

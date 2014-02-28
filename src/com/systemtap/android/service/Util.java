@@ -21,7 +21,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.systemtap.android.Config;
-import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
+import com.systemtap.android.net.SystemTapMessage.ModuleStatus;
 
 public class Util
 {

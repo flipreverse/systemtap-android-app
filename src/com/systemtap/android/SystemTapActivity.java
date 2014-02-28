@@ -35,7 +35,7 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import com.systemtap.android.net.protocol.SystemTapMessage.ModuleStatus;
+import com.systemtap.android.net.SystemTapMessage.ModuleStatus;
 import com.systemtap.android.service.Module;
 import com.systemtap.android.service.SystemTapBinder;
 import com.systemtap.android.service.SystemTapService;
