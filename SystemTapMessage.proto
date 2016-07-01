@@ -1,3 +1,4 @@
+syntax = "proto2";
 package SystemTapMessage;
 
 option java_package = "com.systemtap.android.net";
