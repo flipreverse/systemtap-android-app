@@ -1,0 +1,13 @@
+Busybox version: 1.25.0
+Android toolchain:
+	* API: 24
+	* STL: libc++
+
+How to build:
+============
+
+1. Download busybox source code and extract the tarball
+2. copy busybox-config.txt to the busybox directory as .config
+3. Make sure the Android toolchain (arm-linux-androideabi-) is in your path
+4. make (-j X)
+
