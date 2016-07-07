@@ -1,3 +1,10 @@
-- Add message to send,list and delete log/output files
+Important:
+==========
+- Rebuild busybox binary
 - onPrepareDialog(): stap service is sometimes NULL
+- JakeActionBar sometimes behave strange
+
+Nice to have:
+=============
+- Add message to send,list and delete log/output files
 - Make app more android version independent

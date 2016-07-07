@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <CheckBoxPreference android:key="@string/pref_autostart" android:title="@string/pref_autostart_title" android:summary="@string/pref_autostart_text" android:defaultValue="false" android:selectable="true"/>
-    <CheckBoxPreference android:key="@string/pref_restore_modules" android:title="@string/pref_restore_title" android:summary="@string/pref_restore_text" android:disableDependentsState="false" android:enabled="true" android:selectable="true" android:defaultValue="false"/>
-    <CheckBoxPreference android:key="@string/pref_wakelock" android:title="@string/pref_wakelock_title" android:summary="@string/pref_wakelock_text" android:defaultValue="false" android:selectable="true" android:enabled="true"/>
-    <EditTextPreference android:title="@string/pref_port_title" android:key="@string/pref_daemon_port" android:selectable="true" android:enabled="true" android:defaultValue="@string/default_daemon_port"/>
-    <EditTextPreference android:summary="@string/pref_running_modules_text" android:enabled="true" android:title="@string/pref_running_modules_title" android:defaultValue="@string/default_running_modules" android:key="@string/pref_running_modules"/>
-</PreferenceScreen>

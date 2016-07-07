@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center_horizontal"
+    android:orientation="vertical" >
+
+    <Spinner
+        android:id="@+id/spinnerFileList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp" />
+
+    <ListView
+        android:id="@+id/listViewFileList"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:dividerHeight="8dp" >
+
+            </ListView>
+	<TextView
+	           android:id="@android:id/empty"
+	           android:layout_width="wrap_content"
+	           android:layout_height="wrap_content"
+	           android:layout_gravity="center|center_horizontal|center_vertical"
+            android:layout_marginTop="40dp"
+	           android:text="@string/stap_logfile_list_empty"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+	           android:textColor="@color/stap_module_list_text" />
+</LinearLayout>
