@@ -1,7 +1,7 @@
 Important:
 ==========
-- Rebuild busybox binary
-- onPrepareDialog(): stap service is sometimes NULL
+x Rebuild busybox binary
+~ onPrepareDialog(): stap service is sometimes NULL (temporarily workaround)
 - JakeActionBar sometimes behave strange
 
 Nice to have:
