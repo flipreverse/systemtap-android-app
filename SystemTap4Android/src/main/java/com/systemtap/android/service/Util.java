@@ -264,50 +264,27 @@ public class Util
 	 */
 	public static List<Integer> getProcessIDs(Context pContext, String pCmd)
 	{
-		Runtime runtime = null;
-		Process process = null;
-		
 		LinkedList<Integer> list = new LinkedList<Integer>();
 		
 		try
 		{
-			runtime = Runtime.getRuntime();
-			process = runtime.exec(new String[]{"su", "-c", pContext.getFilesDir().getParent() + File.separator + Config.BUSYBOX_NAME + " pidof " + pCmd});
-			BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			BufferedReader suErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-			
-			int ret;
-			if ((ret = process.waitFor()) != 0)
-			{
-				Log.e(TAG,"waitFor() returned error: " + ret);
-				while (in.ready()) {
-					String line;
-					line = in.readLine();
-					Log.e(TAG,"out: " + line);
+			StringTokenizer tokenizer = null;
+
+			CmdStatus ret = runCmdAsRoot(pContext.getFilesDir().getParent() + File.separator + Config.BUSYBOX_NAME + " pidof " + pCmd, false);
+			if (ret.returnCode == 0) {
+
+				for (String line : ret.stdOut) {
+					tokenizer = new StringTokenizer(line, " ");
+					while (tokenizer.hasMoreTokens()) {
+						list.add(Integer.valueOf(tokenizer.nextToken()));
+					}
 				}
-				while (suErr.ready()) {
-					String line;
-					line = suErr.readLine();
-					Log.e(TAG,"err:" + line);
-				}
+				Log.d(TAG, "Got " + list.size() + " pids from pidof");
+
+				return list;
+			} else {
 				return null;
 			}
-
-			String line = null;
-			StringTokenizer tokenizer = null;
-			
-			while ((line = in.readLine()) != null)
-			{
-				tokenizer = new StringTokenizer(line, " ");
-				while (tokenizer.hasMoreTokens())
-				{
-					list.add(Integer.valueOf(tokenizer.nextToken()));
-				}
-			}
-			in.close();
-			Log.d(TAG,"Got " + list.size() + " pids from pidof");
-
-			return list;
 		}
 		catch(Exception e)
 		{
