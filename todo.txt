@@ -1,7 +1,5 @@
 Important:
 ==========
-1. SystemTapTimerTask does *not* work properly
-2. Check if all settings work as expected
 - onPrepareDialog(): stap service is sometimes NULL (temporarily workaround)
 - Replace JakeActionBar by something native
 
