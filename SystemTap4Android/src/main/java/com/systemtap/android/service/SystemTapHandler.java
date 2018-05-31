@@ -310,7 +310,7 @@ public class SystemTapHandler extends Handler
             if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.STAP_SCRIPT_NAME + params, false).returnCode == 0) {
                 try {
                     /* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
-                    Thread.sleep(900);
+                    Thread.sleep(1500);
                 } catch (InterruptedException e) {
                     /* We don't care :-) */
                 }
