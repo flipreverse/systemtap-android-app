@@ -272,15 +272,27 @@ public class Util
 		try
 		{
 			runtime = Runtime.getRuntime();
-			process = runtime.exec(new String[]{pContext.getFilesDir().getParent() + File.separator + Config.BUSYBOX_NAME,"pidof",pCmd});
-			DataInputStream in = new DataInputStream(process.getInputStream());
+			process = runtime.exec(new String[]{"su", "-c", pContext.getFilesDir().getParent() + File.separator + Config.BUSYBOX_NAME + " pidof " + pCmd});
+			BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			BufferedReader suErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 			
-			if (process.waitFor() != 0)
+			int ret;
+			if ((ret = process.waitFor()) != 0)
 			{
+				Log.e(TAG,"waitFor() returned error: " + ret);
+				while (in.ready()) {
+					String line;
+					line = in.readLine();
+					Log.e(TAG,"out: " + line);
+				}
+				while (suErr.ready()) {
+					String line;
+					line = suErr.readLine();
+					Log.e(TAG,"err:" + line);
+				}
 				return null;
 			}
 
-			Log.d(TAG,"Parsing pidof output...");
 			String line = null;
 			StringTokenizer tokenizer = null;
 			
