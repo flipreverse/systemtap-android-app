@@ -168,7 +168,6 @@ public class SystemTapActivity  extends SherlockFragmentActivity implements Acti
 					Log.e(TAG, "onClick(): User wants to stop module \"" + module.getName() + "\", but module is not running.");
 				}
 			} else if (selectedAction.equalsIgnoreCase(this.getString(R.string.stap_module_details_action_start))) {
-				Log.e(TAG,"STARTING: "+module.getName());
 				if (module.getStatus() == ModuleStatus.STOPPED || module.getStatus() == ModuleStatus.CRASHED) {
 					mSystemTapService.startModule(module.getName());
 				} else {
