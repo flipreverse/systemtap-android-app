@@ -6,6 +6,12 @@ or use gradle on commandline.
 Either way gradle should automatically fetch and build it including all dependencies.
 If gralde complains about a faulty line in an xml file from sherlock actionbar, just comment that line out.
 
+Updating protobuf definition
+----------------------------
+1.  Just run the following command:
+
+       protoc --java_out=src/ SystemTapMessage.proto
+
 Build busybox
 -------------
 1. Make sure you have the recent version of android ndk (current r8)
