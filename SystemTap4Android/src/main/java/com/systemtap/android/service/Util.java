@@ -276,14 +276,26 @@ public class Util
 	public static boolean isPidFilePidValid(Context pContext, File pPidFile) throws IOException
 	{
 		int pid = -1;
-		DataInputStream in = new DataInputStream(new FileInputStream(pPidFile));
-		pid = Integer.valueOf(in.readLine());
-		in.close();
-		in = null;
+
+		if (!pPidFile.exists()) {
+		    Log.e(TAG,"pid file (" + pPidFile + ") does not exist.");
+			return false;
+		}
+		BufferedReader in = new BufferedReader(new FileReader(pPidFile));
+		try {
+			pid = Integer.valueOf(in.readLine());
+		} catch (NumberFormatException e) {
+			Log.e(TAG, "Cannot read from pid file (" + pPidFile + ")", e);
+		} finally {
+			in.close();
+			in = null;
+		}
+
 		List<Integer> pids = Util.getProcessIDs(pContext,Config.STAP_IO_NAME);
 
 		if (pids == null)
 		{
+			Log.e(TAG,"PID list is empty");
 			return false;
 		}
 		
