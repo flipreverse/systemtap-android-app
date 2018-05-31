@@ -1,28 +1,10 @@
 A graphical frontend to control SystemTap for Android
 =====================================================
 
-Set up the Android project
----------------------------
-
-1. Unpack the Sherlock ActionBar tarball to a directory you want
-2. Import it to Eclipse
-
-	File --> Import --> Existing Project into Workspace --> Select root directory
-	
- The list below contains three projects. You will just need the last one, which is the actually library.
- Mark it and click on `Finish`
-
-3. You may need to mark it as libraray project
-
-	Right click on the project --> Properties --> Android --> Mark `Is Library` --> OK
-	
-4. Use the steps descried in 2. to import the real project
-
-Updating protobuf definition
-----------------------------
-1.  Just run the following command:
-
-	protoc --java_out=src/ SystemTapMessage.proto
+Since this project moved to Android Studio, it should be sufficient to either load it into Android Studio
+or use gradle on commandline.
+Either way gradle should automatically fetch and build it including all dependencies.
+If gralde complains about a faulty line in an xml file from sherlock actionbar, just comment that line out.
 
 Build busybox
 -------------
