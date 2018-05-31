@@ -1,18 +1,8 @@
 #!/system/bin/sh
 BUSYBOX="busybox"
 
-line=","
-while [ $line != ":q!" ];
-do
-	read line
-	first=${line%=*}
-	second=${line#*=}
-	case "$first" in
-	"pid") PID=$second;;
-	"busyboxdir") BUSYBOX_DIR=$second;;
-	*) ;;
-	esac
-done;
+PID=${1}; shift
+BUSYBOX_DIR=${1}; shift
 
 if [ $PID -eq -1 ];
 then

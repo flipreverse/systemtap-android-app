@@ -299,34 +299,32 @@ public class SystemTapHandler extends Handler
 			DateFormat format = new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss");
 			Date date = new Date();
 			String outputFilename = pModulename + "_" + format.format(date);
-			list = new LinkedList<String>();
-			list.add("modulename=" + pModulename);
-			list.add("moduledir=" + mModulesPath);
-			list.add("outputname=" + outputFilename);
-			list.add("outputdir=" + mOutputPath);
-			list.add("logdir=" + mLogPath);
-			list.add("rundir=" + mRunPath);
-			list.add("stapdir=" + mSystemTapService.getFilesDir().getParent());
-			list.add(":q!");
-			
-			if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.STAP_SCRIPT_NAME,list) != 0) {
-				Log.e(TAG,"Could not start stap");
-				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_failed) + ":" + pModulename, Toast.LENGTH_SHORT).show();
-				mModuleManagement.updateModuleStatus(module.getName(), ModuleStatus.CRASHED);
-			} else {
-				try {
-					/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
-					Thread.sleep(900);
-				} catch (InterruptedException e) {
-					/* We don't care :-) */
-				}
-				ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), ModuleStatus.RUNNING);
-				mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
-				if (moduleStatus == ModuleStatus.RUNNING) {
-					this.incrementRunningModules();
-				}
-			}
-		} else {
+			String params = " " + pModulename;
+			params += " " + mModulesPath;
+			params += " " + outputFilename;
+			params += " " + mOutputPath;
+			params += " " + mLogPath;
+			params += " " + mRunPath;
+			params += " " + mSystemTapService.getFilesDir().getParent() + File.separator + "systemtap";
+			params += " ";
+            if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.STAP_SCRIPT_NAME + params, false).returnCode == 0) {
+                try {
+                    /* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
+                    Thread.sleep(900);
+                } catch (InterruptedException e) {
+                    /* We don't care :-) */
+                }
+                ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, module.getName(), ModuleStatus.RUNNING);
+                mModuleManagement.updateModuleStatus(module.getName(), moduleStatus);
+                if (moduleStatus == ModuleStatus.RUNNING) {
+                    this.incrementRunningModules();
+                }
+            } else {
+                Log.e(TAG,"Could not start stap");
+                Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_failed) + ":" + pModulename, Toast.LENGTH_SHORT).show();
+                mModuleManagement.updateModuleStatus(module.getName(), ModuleStatus.CRASHED);
+            }
+        } else {
 			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_start_fail_nomodule) + ":" + pModulename, Toast.LENGTH_SHORT).show();
 			Log.e(TAG, "START_MODULE: No such module " + pModulename);
 		}
@@ -346,27 +344,24 @@ public class SystemTapHandler extends Handler
 				Log.e(TAG,"Can't read pid file(" + pidFile.getAbsolutePath() + "):" + e.getMessage());
 				return;
 			}
-			list = new LinkedList<String>();
-			list.add("pid=" + pid);
-			list.add("busyboxdir=" + mSystemTapService.getFilesDir().getParent());
-			list.add(":q!");
-			if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME,list) != 0) {
-				Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail) + ":" + pModulename, Toast.LENGTH_SHORT).show();
-				Log.e(TAG, "Could not run kill script (" + pModulename + ")");
-			} else {
-				try {
-					/* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
-					Thread.sleep(700);
-				} catch (InterruptedException e) {
-					/* We don't care :-) */
-				}
-				ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, pModulename, ModuleStatus.STOPPED);
-				mModuleManagement.updateModuleStatus(pModulename, moduleStatus);
-				if (moduleStatus == ModuleStatus.STOPPED) {
-					this.decrementRunningModules();
-				}
-			}
-		} else {
+			String params = " " + pid + " " + mSystemTapService.getFilesDir().getParent();
+            if (Util.runCmdAsRoot(mSystemTapService.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME + params, false).returnCode == 0) {
+                try {
+                    /* Wait a few milliseconds until stapio is *really* started. Otherwise the following status update will fail! */
+                    Thread.sleep(700);
+                } catch (InterruptedException e) {
+                    /* We don't care :-) */
+                }
+                ModuleStatus moduleStatus = Util.checkModuleStatus(mSystemTapService, pModulename, ModuleStatus.STOPPED);
+                mModuleManagement.updateModuleStatus(pModulename, moduleStatus);
+                if (moduleStatus == ModuleStatus.STOPPED) {
+                    this.decrementRunningModules();
+                }
+            } else {
+                Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail) + ":" + pModulename, Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Could not run kill script (" + pModulename + ")");
+            }
+        } else {
 			Toast.makeText(mSystemTapService, mSystemTapService.getText(R.string.stap_service_stop_fail_nomdoule), Toast.LENGTH_SHORT).show();
 			Log.e(TAG, "Could not stop module - selected module (" + pModulename + ") is not running");
 		}

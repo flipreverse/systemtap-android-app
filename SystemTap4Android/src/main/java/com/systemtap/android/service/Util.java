@@ -19,13 +19,20 @@
 
 package com.systemtap.android.service;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -72,57 +79,77 @@ public class Util
 	}
 	
 	/**
-	 * Execute the command {@link pCmd} on a shell as root sending each string in {@link pInput} as a separated line stdin of the new process.
+	 * Execute the command {@link pCmd} on a shell as root.
 	 * @param pCmd
-	 * @param pInput
-	 * @return 0 if all went fine, -1 otherwise
+	 * @param detached run the command asynchronously
+	 * @return An instance of CmdStatus containing the output of stdout and stderr if any. returnCode is -1 if anything unusual happened
 	 */
-	public static int runCmdAsRoot(String pCmd, List<String> pInput)
+	public static CmdStatus runCmdAsRoot(String pCmd, boolean detached)
 	{
 		Runtime runtime;
 		Process process;
-		int retval = -1;
-		
-		Log.i(TAG, "Try to run \"" + pCmd + "\" as root");
+        CmdStatus ret = new CmdStatus();
+
+		String cmd = pCmd;
+		if (detached) {
+			cmd += " &";
+		}
+		Log.i(TAG, "Try to run \"" + cmd + "\" as root");
 		try
 		{
 			runtime = Runtime.getRuntime();
-			process = runtime.exec(new String[]{"su","-c",pCmd});
-			if (pInput != null && pInput.size() > 0)
-			{
-				PrintWriter out = new PrintWriter(process.getOutputStream(),true);
-				Iterator<String> iter = pInput.iterator(); 
-				while (iter.hasNext())
-				{
-					String next = iter.next();
-					out.write(next + "\n");
-				}
-				out.flush();
-				out.close();
+			process = runtime.exec(new String[]{"su", "-c", "sh"});
+
+			BufferedWriter suInput = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+			BufferedReader suOutput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			BufferedReader suErr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+
+			suInput.write(cmd);
+			suInput.newLine();
+			suInput.flush();
+			try {
+				/* Wait a few milliseconds until the command has been executed. */
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				/* We don't care :-) */
 			}
-			retval = process.waitFor();
-			if (retval != 0)
-			{
-				DataInputStream in = new DataInputStream(process.getErrorStream());
-				String line = null;
-				Log.e(TAG, "Error while running \"" + pCmd + "\" as root:");
-				while ((line = in.readLine()) != null)
-				{
-					Log.e(TAG,line);
-				}				
-				in.close();
+			while (suOutput.ready()) {
+				String line;
+				line = suOutput.readLine();
+				ret.stdOut.addLast(line);
+				Log.d(TAG,"stdout: " + line);
 			}
-			else
+			while (suErr.ready()) {
+				String line;
+				line = suErr.readLine();
+				ret.stdErr.addLast(line);
+				Log.d(TAG,"stderr: " + line);
+			}
+			// Get the exitcode of cmd
+            suInput.write("echo $?");
+            suInput.newLine();
+            suInput.flush();
+            try {
+                ret.returnCode = Integer.valueOf(suOutput.readLine());
+            } catch (NumberFormatException e) {
+                Log.e(TAG, "Cannot parse exitcode", e);
+            }
+
+			// Terminate our shell
+			suInput.write("exit");
+			suInput.newLine();
+			suInput.flush();
+			if (process.waitFor() != 0)
 			{
-				Log.i(TAG, "\"" + pCmd + "\" terminated successfully.");
+				Log.i(TAG, "SU shell didn't terminate successfully.");
 			}
 		}
 		catch (Exception e)
 		{
-			Log.e(TAG,"Can't execute \"" + pCmd + "\" as root: " + e.getMessage());
+			Log.e(TAG,"Can't execute \"" + cmd + "\" as root: " + e.getMessage());
 		}
 		
-		return retval;
+		return ret;
 	}
 	
 	/**

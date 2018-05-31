@@ -403,11 +403,8 @@ public class SystemTapService extends Service
 		mInit = true;
 		
 		Log.d(TAG,"Make sure that no stap process is already running at service startup");
-		LinkedList<String> list = new LinkedList<String>();
-		list.add("pid=-1");
-		list.add("busyboxdir=" + this.getFilesDir().getParent());
-		list.add(":q!");
-		Util.runCmdAsRoot(this.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME, list);
+		String params = " -1 " + this.getFilesDir().getParent();
+		Util.runCmdAsRoot(this.getFilesDir().getParent() + File.separator + Config.KILL_SCRIPT_NAME + params, false);
 		
 		Notification notification = new Notification(R.drawable.ic_launcher, this.getText(R.string.stap_service_started),System.currentTimeMillis());
 		Intent targetIntent = new Intent(this,SystemTapActivity.class);

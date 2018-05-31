@@ -22,25 +22,16 @@ LOG_OUTPUT_EXTENSION=".txt"
 PID_EXTENSION=".pid"
 KERNEL_MODULE_EXTENSION=".ko"
 
-line=","
-while [ $line != ":q!" ];
-do
-	read line
-	first=${line%=*}
-	second=${line#*=}
-	case "$first" in
-	"modulename") MODULE_NAME=$second;;
-	"moduledir") MODULE_DIR=$second;;
-	"outputname") OUTPUT_NAME=$second;;
-	"outputdir") OUTPUT_DIR=$second;;
-	"logdir") LOG_DIR=$second;;
-	"rundir") RUN_DIR=$second;;
-	"stapdir") STAP_DIR=$second;;
-	*) ;;
-	esac
-done;
+MODULE_NAME=${1}; shift
+MODULE_DIR=${1}; shift
+OUTPUT_NAME=${1}; shift
+OUTPUT_DIR=${1}; shift
+LOG_DIR=${1}; shift
+RUN_DIR=${1}; shift
+STAP_DIR=${1}; shift
 
 LOG_OUTPUT=$LOG_DIR"/"$OUTPUT_NAME$LOG_OUTPUT_EXTENSION
+PID_OUTPUT=$RUN_DIR"/"$MODULE_NAME$PID_EXTENSION
 
 export SYSTEMTAP_STAPRUN=$STAP_DIR"/staprun"
 export SYSTEMTAP_STAPIO=$STAP_DIR"/stapio"
@@ -48,4 +39,7 @@ export SYSTEMTAP_STAPIO=$STAP_DIR"/stapio"
 echo "Loaded kernel module: "$MODULE_NAME.ko > $LOG_OUTPUT
 echo "Output file: "$OUTPUT_NAME".*" >> $LOG_OUTPUT
 
-$SYSTEMTAP_STAPRUN -U $RUN_DIR"/"$MODULE_NAME$PID_EXTENSION -o $OUTPUT_DIR"/"$OUTPUT_NAME -S 256 $MODULE_DIR"/"$MODULE_NAME$KERNEL_MODULE_EXTENSION >> $LOG_OUTPUT 2>&1 &
+$SYSTEMTAP_STAPRUN  -o $OUTPUT_DIR"/"$OUTPUT_NAME -S 256 $MODULE_DIR"/"$MODULE_NAME$KERNEL_MODULE_EXTENSION >> $LOG_OUTPUT 2>&1 &
+
+PID=${!}
+echo ${PID} >> $PID_OUTPUT
