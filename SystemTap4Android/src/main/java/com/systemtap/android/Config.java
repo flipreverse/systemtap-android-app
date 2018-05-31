@@ -28,9 +28,9 @@ public class Config
 	
 	private static final String MAIN_DIR = "systemtap";	
 	private static final String MODULES_DIR = "modules";	
-	private static final String STAP_OUTPUT_DIR = "stap_output";	
-	private static final String STAP_LOG_DIR = "stap_log";	
-	private static final String STAP_RUN_DIR = "stap_run";	
+	private static final String STAP_OUTPUT_DIR = "output";
+	private static final String STAP_LOG_DIR = "log";
+	private static final String STAP_RUN_DIR = "run";
 	
 	public static final String MEDIA_PATH = "/sdcard/"/*Environment.getExternalStorageDirectory().getAbsolutePath()*/;
 	public static final String MAIN_PATH = MAIN_DIR;
