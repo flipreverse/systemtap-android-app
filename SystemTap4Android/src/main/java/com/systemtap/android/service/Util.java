@@ -152,7 +152,11 @@ public class Util
 			return false;
 		}
 	}
-	
+
+	public static boolean copyFileFromRAW(Context pContext, int pRAWID, String pFilename) {
+		return Util.copyFileFromRAW(pContext,pRAWID,pFilename,null);
+	}
+
 	/**
 	 * Copy the file included in the apk-file (identified by {@link pRAWID}) to the apps private data dir as file {@link pFilename}
 	 * @param pContext the applicatins context get access to the raw resource
@@ -160,7 +164,7 @@ public class Util
 	 * @param pFilename the filename the raw resource should be copied to
 	 * @return true if all went fine, false otherwise
 	 */
-	public static boolean copyFileFromRAW(Context pContext, int pRAWID, String pFilename)
+	public static boolean copyFileFromRAW(Context pContext, int pRAWID, String pFilename, String pDir)
 	{
 		InputStream is = null;
 		OutputStream os = null;
@@ -168,9 +172,16 @@ public class Util
 		byte[] buffer = new byte[1024];
 		int count  = 0;
 		
-		try
-		{
-			file = new File(pContext.getFilesDir().getParent() + File.separator + pFilename);
+		try {
+			if (pDir != null) {
+				File dir = new File(pContext.getFilesDir().getParent() + File.separator + pDir);
+				if (dir.mkdirs()) {
+					Log.d(TAG, "copyFileFromRAW(): Created directories: '" + dir.getAbsolutePath() + "'.");
+				}
+                file = new File(pContext.getFilesDir().getParent() + File.separator + pDir + File.separator + pFilename);
+			} else {
+                file = new File(pContext.getFilesDir().getParent() + File.separator + pFilename);
+            }
 			is = pContext.getApplicationContext().getResources().openRawResource(pRAWID);
 			if (file.exists()) {
 				byte md5Old[], md5New[];

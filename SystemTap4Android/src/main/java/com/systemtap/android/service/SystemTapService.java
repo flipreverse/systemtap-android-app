@@ -367,12 +367,12 @@ public class SystemTapService extends Service
 		}
 
 		/* Second extract all included scripts or binaries to our private data directory */
-		if (!Util.copyFileFromRAW(this, R.raw.stapio, Config.STAP_IO_NAME))
+		if (!Util.copyFileFromRAW(this, R.raw.stapio, Config.STAP_IO_NAME, "systemtap"))
 		{
 			mInitFailed = true;
 			return;
 		}
-		if (!Util.copyFileFromRAW(this, R.raw.staprun, Config.STAP_RUN_NAME))
+		if (!Util.copyFileFromRAW(this, R.raw.staprun, Config.STAP_RUN_NAME, "systemtap"))
 		{
 			mInitFailed = true;
 			return;
